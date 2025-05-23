@@ -8,81 +8,221 @@
   <link rel="preload" href="js/home.js" as="script">
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- Anti-DevTools Protection -->
+  <script>
+    // Disable right-click
+    document.addEventListener('contextmenu', (e) => e.preventDefault());
+
+    // Disable keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      // Disable F12
+      if (e.key === 'F12') {
+        e.preventDefault();
+        return false;
+      }
+      // Disable Ctrl+Shift+I and Ctrl+Shift+J
+      if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j')) {
+        e.preventDefault();
+        return false;
+      }
+      // Disable Ctrl+U (view source)
+      if (e.ctrlKey && (e.key === 'U' || e.key === 'u')) {
+        e.preventDefault();
+        return false;
+      }
+    });
+
+    // Detect DevTools opening
+    let devtools = function() {};
+    devtools.toString = function() {
+      this.opened = true;
+      return '';
+    }
+
+    // Check if DevTools is opened
+    setInterval(function() {
+      if (window.outerHeight - window.innerHeight > 200 || window.devtools.opened || window.Firebug?.chrome?.isInitialized) {
+        document.body.innerHTML = 'DevTools is not allowed on this site.';
+      }
+      console.log(devtools);
+    }, 1000);
+
+    // Additional protection for iframes
+    if (window.self !== window.top) {
+      window.top.location.href = window.self.location.href;
+    }
+  </script>
+  <script defer src="js/genres.js"></script>
+  <script defer src="js/browse.js"></script>
   <script defer src="js/home.js"></script>
 </head>
 
-
-  
-<body>
-  <div class="navbar">
-    <img src="lulu.png" alt="LOGO HERE" />
-    <div class="nav-links">
+<body>  <div class="navbar">
+    <img src="lulu.png" alt="LOGO HERE" style="cursor:pointer;" onclick="window.location.href='index.html'" />    <div class="nav-links">
       <a href="index.html">Home</a>
-      <input type="text" class="search-bar" placeholder="Search..." onfocus="openSearchModal()" />
+      <button onclick="toggleBrowseView()" class="browse-btn">Browse <i class="fas fa-film"></i></button>
+      <div class="search-container">
+        <input type="text" class="search-bar" id="navbar-search" placeholder="Search..." oninput="searchTMDB()" />
+      </div>
+      <button onclick="toggleTheme()" class="theme-toggle">
+        <i class="fas fa-moon dark-icon"></i>
+        <i class="fas fa-sun light-icon"></i>
+      </button>
     </div>
   </div>
 
-  <div class="banner" id="banner">
-    <h1 id="banner-title"></h1>
+  <div id="search-results" class="search-results-container">
+    <div class="browse-grid" id="navbar-search-results"></div>
   </div>
 
-  <div class="row">
-    <h2>Trending Movies</h2>
-    <div class="list" id="movies-list"></div>
+  <div id="browse-content"style="display: none;">
+    <div class="filters-container">      <div class="filter-group">
+        <label>Content Type</label>
+        <select id="type-filter" onchange="updateFilter('type', this.value)">
+          <option value="movie">Movies</option>
+          <option value="tv">TV Shows</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Genre</label>
+        <select id="genre-filter" onchange="updateFilter('genre', this.value)">
+          <option value="">All Genres</option>
+          <option value="28">Action</option>
+          <option value="12">Adventure</option>
+          <option value="16">Animation</option>
+          <option value="35">Comedy</option>
+          <option value="80">Crime</option>
+          <option value="99">Documentary</option>
+          <option value="18">Drama</option>
+          <option value="10751">Family</option>
+          <option value="14">Fantasy</option>
+          <option value="36">History</option>
+          <option value="27">Horror</option>
+          <option value="10402">Music</option>
+          <option value="9648">Mystery</option>
+          <option value="10749">Romance</option>
+          <option value="878">Science Fiction</option>
+          <option value="53">Thriller</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Year</label>
+        <select id="year-filter" onchange="updateFilter('year', this.value)">
+          <!-- Will be populated by JavaScript -->
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Country</label>
+        <select id="country-filter" onchange="updateFilter('country', this.value)">
+          <option value="">All Countries</option>
+          <option value="US">United States</option>
+          <option value="GB">United Kingdom</option>
+          <option value="FR">France</option>
+          <option value="DE">Germany</option>
+          <option value="IT">Italy</option>
+          <option value="ES">Spain</option>
+          <option value="JP">Japan</option>
+          <option value="KR">South Korea</option>
+          <option value="IN">India</option>
+          <option value="CN">China</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Sort By</label>
+        <select onchange="updateFilter('sort', this.value)">
+          <option value="popularity.desc">Popularity</option>
+          <option value="vote_average.desc">Rating</option>
+          <option value="release_date.desc">Release Date</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="loading-spinner" class="loading-spinner" style="display: none;">
+      <div class="spinner"></div>
+      <p>Loading content...</p>
+    </div>
+
+    <div id="browse-results" class="browse-results">
+      <!-- Results will be populated here -->
+    </div>
+    <div class="pagination" id="pagination">
+      <button id="prev-page" onclick="changePage('prev')">&laquo; Prev</button>
+      <div id="page-numbers"></div>
+      <button id="next-page" onclick="changePage('next')">Next &raquo;</button>
+      <span class="page-info" id="page-info"></span>
+    </div>
   </div>
 
-  <div class="row">
-    <h2>Trending TV Shows</h2>
-    <div class="list" id="tvshows-list"></div>
-  </div>
+  <div id="main-content">
+    <div class="banner" id="banner">
+      <div class="banner-content">
+        <h1 id="banner-title"></h1>
+        <p id="banner-overview"></p>
+        <div class="banner-buttons">
+          <button class="banner-button play" onclick="showDetails(currentBannerItem)">
+            <i class="fas fa-play"></i> Play
+          </button>
+          <button class="banner-button more-info" onclick="showDetails(currentBannerItem)">
+            <i class="fas fa-info-circle"></i> More Info
+          </button>
+        </div>
+      </div>
+    </div>
 
-  <div class="row">
-    <h2>Trending Anime</h2>
-    <div class="list" id="anime-list"></div>
-  </div>
+    <div class="row">
+      <h2>Trending Movies</h2>
+      <div class="list" id="movies-list"></div>
+    </div>
 
+    <div class="row">
+      <h2>Trending TV Shows</h2>
+      <div class="list" id="tvshows-list"></div>
+    </div>
+
+    <div class="row">
+      <h2>Trending Anime</h2>
+      <div class="list" id="anime-list"></div>
+    </div>    <div class="row">
+      <h2>Korean Dramas</h2>
+      <div class="list" id="kdramas-list"></div>
+    </div>
+  </div>
   <div class="modal" id="modal">
     <div class="modal-content">
-      <span class="close" onclick="closeModal()" style="color: red;">&times;</span>
-      <div class="modal-body">
+      <span class="close" onclick="closeModal()"><i class="fas fa-times"></i></span>
+      
+      <div class="video-section">
+        <iframe id="modal-video" frameborder="0" allowfullscreen allow="autoplay; fullscreen"></iframe>
         
-         <iframe id="modal-video" width="100%" height="315" frameborder="0" allowfullscreen></iframe> 
-
-        
-<div class="server-selector">
-  <label for="server">Change Server:</label>
-  <select id="server" onchange="changeServer()">
-    <option value="vidsrc.cc">Vidsrc.cc</option>
-    <option value="vidsrc.me">Vidsrc.me</option>
-    <option value="player.videasy.net">Player.Videasy.net</option>
-    </select>
-</div>
-
-        
-  <img id="modal-image" src="" alt="" />
-  <div class="modal-text">
-    <h2 id="modal-title"></h2>
-    <div class="stars" id="modal-rating"></div>
-    <p id="modal-description"></p>
-  </div>
-</div>
-
-
-     
+        <div class="server-selector">
+          <h3><i class="fas fa-server"></i> Available Servers</h3>
+          <div class="server-buttons" id="server-buttons">
+            <!-- Server buttons will be populated dynamically -->
+          </div>
+        </div>
+      </div>      <div class="modal-body">
+        <div class="modal-image">
+          <img id="modal-image" src="" alt="" />
+        </div>
+        <div class="modal-text">
+          <h2 id="modal-title"></h2>
+          <div class="modal-meta">
+            <div class="stars" id="modal-rating"></div>
+            <span class="release-date" id="modal-year">2025</span>
+            <span class="genre" id="modal-genre">Action, Crime</span>
+          </div>
+          <p id="modal-description"></p>
+        </div>
+      </div>
     </div>
   </div>
-
-  <div class="search-modal" id="search-modal">
-    <span class="close" onclick="closeSearchModal()" style="color: red;">&times;</span>
-    <input type="text" id="search-input" placeholder="Search for a movie or show..." oninput="searchTMDB()" />
-    <div class="results" id="search-results"></div>
-  </div>
-
-<footer class="footer">
-  <div class="footer-content">
-    <p>&copy; JustFlixMovies does not host any files; it merely pulls streams from third-party services. Legal issues should be taken up with the file hosts and providers. JustFlixMovies is not responsible for any media files shown by the video providers.
-
-</p>
+<footer class="footer"><div class="footer-content">
+    <p>JustFlixMovies does not host any files; it merely pulls streams from third-party services.</p>
+    <p>Legal issues should be taken up with the file hosts and providers. JustFlixMovies is not responsible for any media files shown by the video providers.</p>
     <div class="footer-links">
       <a href="#">Disclaimer</a>
       <a href="#">About Us</a>
