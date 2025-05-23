@@ -65,14 +65,6 @@ const API_KEY = 'f7969edc09425407417da271f5077c89';
         embedURL = `https://vidsrc.net/embed/${type}/?tmdb=${currentItem.id}`;
       } else if (server === "player.videasy.net") {
         embedURL = `https://player.videasy.net/${type}/${currentItem.id}`;
-      } else if (server === "fzmovies.cms") {
-        embedURL = `https://fzmovies.cms/embed/${type}/${currentItem.id}`;
-      } else if (server === "bunny.net") {
-        embedURL = `https://iframe.mediadelivery.net/embed/${currentItem.videoLibraryId}/${currentItem.videoId}`;
-      } else if (server === "vdocipher.com") {
-        embedURL = `https://player.vdocipher.com/v2/?otp=${currentItem.otp}&playbackInfo=${currentItem.playbackInfo}`;
-      } else if (server === "superembed.stream") {
-        embedURL = `https://superembed.stream/embed/${type}/${currentItem.id}`;
       } else {
         console.error("Unsupported server:", server);
       }
