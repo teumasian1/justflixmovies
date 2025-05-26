@@ -64,7 +64,7 @@ const API_KEY = 'f7969edc09425407417da271f5077c89';
       
       // Fetch from multiple pages to get more K-dramas
       for (let page = 1; page <= 3; page++) {
-        const res = await fetch(`${BASE_URL}/discover/tv?api_key=${API_KEY}&with_original_language=ko&sort_by=popularity.desc&page=${page}`);
+        const res = await fetch(`${BASE_URL}/discover/tv?api_key=${API_KEY}&with_original_language=ko&sort_by=popularity.desc&first_air_date.gte=2024-01-01&first_air_date.lte=2025-12-31&page=${page}`);
         const data = await res.json();
         // Filter to ensure we only get Korean dramas (exclude variety shows, etc.)
         const filtered = data.results.filter(item => 
@@ -119,8 +119,11 @@ const API_KEY = 'f7969edc09425407417da271f5077c89';
     title.textContent = item.title || item.name;
     
     const rating = document.createElement('div');
-    rating.className = 'poster-rating';
-    rating.innerHTML = '★'.repeat(Math.round(item.vote_average / 2));
+    rating.className = 'rating-circle';
+    const percent = Math.round(item.vote_average * 10);
+    rating.textContent = `${percent}%`;
+    rating.style.setProperty('--percent', percent);
+    posterContainer.appendChild(rating);
     
     const releaseYear = document.createElement('div');
     releaseYear.className = 'poster-year';
@@ -140,7 +143,10 @@ const API_KEY = 'f7969edc09425407417da271f5077c89';
     
     // Make content immediately clickable
     posterContainer.style.opacity = '1';
-    posterContainer.onclick = () => showDetails(item);
+    posterContainer.onclick = (e) => {
+  e.preventDefault();
+  showDetails(item);
+};
   });
 
   // Then check availability in parallel
@@ -162,20 +168,23 @@ const API_KEY = 'f7969edc09425407417da271f5077c89';
 
   // Wait for all checks to complete
   await Promise.all(availabilityChecks);
-}    async function showDetails(item) {
+}  async function showDetails(item) {
   currentItem = item;
-  document.getElementById('modal').style.display = 'flex';
+  const modal = document.getElementById('modal');
+  modal.style.display = 'flex';
+  modal.classList.add('show');
   document.getElementById('modal-title').textContent = item.title || item.name;
   document.getElementById('modal-description').textContent = item.overview;
   document.getElementById('modal-image').src = `${IMG_URL}${item.poster_path}`;
   document.getElementById('modal-rating').innerHTML = '★'.repeat(Math.round(item.vote_average / 2));
-
+  document.getElementById('modal-year').textContent = new Date(item.release_date || item.first_air_date).getFullYear();
+  
   // Set media type
   currentItem.media_type = currentItem.media_type || (currentItem.first_air_date ? 'tv' : 'movie');
-
+  
   // Populate server buttons
   populateServerButtons();
-
+  
   // Try all servers in order and select the first working one
   const type = currentItem.media_type;
   const endpoints = type === 'movie' ? MOVIE_ENDPOINTS : TV_ENDPOINTS;
@@ -185,16 +194,17 @@ const API_KEY = 'f7969edc09425407417da271f5077c89';
     { id: 'player.videasy.net' },
     ...endpoints.map((_, i) => ({ id: `server${i + 3}` }))
   ];
+
   let found = false;
   for (let i = 0; i < servers.length; i++) {
     const serverId = servers[i].id;
     const url = getServerUrl(serverId, type, currentItem.id);
     if (!url) continue;
+
     try {
       const response = await fetch(url, { method: 'HEAD', mode: 'no-cors' });
       if (response.ok || response.type === 'opaque') {
         changeServer(serverId);
-        // Highlight the selected server button
         const buttons = document.querySelectorAll('.server-btn');
         buttons.forEach(btn => btn.classList.remove('active'));
         const activeButton = Array.from(buttons).find(btn => {
@@ -215,6 +225,7 @@ const API_KEY = 'f7969edc09425407417da271f5077c89';
       // Try next
     }
   }
+
   // If none work, fallback to first
   if (!found) {
     changeServer('vidsrc.cc');
@@ -270,36 +281,35 @@ const API_KEY = 'f7969edc09425407417da271f5077c89';
       try {
         const videoFrame = document.getElementById('modal-video');
         
-        // Save current source to check if it changes
-        const previousSrc = videoFrame.src;
+        // Clear current content first
+        videoFrame.src = '';
         
-        // Update iframe source
-        videoFrame.src = embedURL;
-        
-        // Clear previous error handler
-        videoFrame.onerror = null;
-        
-        // Add load event handler
-        videoFrame.onload = () => {
-          console.log(`Server ${server} loaded successfully`);
-        };
-        
-        // Add error handler
-        videoFrame.onerror = () => {
-          console.error(`Failed to load video from ${server}`);
+        // Short delay to ensure clearing happens
+        setTimeout(() => {
+          // Update iframe source
+          videoFrame.src = embedURL;
           
-          // Only try next server if current attempt actually changed the source
-          if (previousSrc !== embedURL) {
+          // Add load event handler
+          videoFrame.onload = () => {
+            console.log(`Server ${server} loaded successfully`);
+          };
+          
+          // Add error handler
+          videoFrame.onerror = () => {
+            console.error(`Failed to load video from ${server}`);
             videoFrame.src = ''; // Clear the failed source
-            // Try next server automatically
-            const currentIndex = parseInt(server.replace('server', ''));
-            const nextServer = `server${currentIndex + 1}`;
-            const nextUrl = getServerUrl(nextServer, type, currentItem.id);
-            if (nextUrl) {
-              changeServer(nextServer);
+            
+            // Try next server automatically if this is a numbered server
+            if (server.startsWith('server')) {
+              const currentIndex = parseInt(server.replace('server', ''));
+              const nextServer = `server${currentIndex + 1}`;
+              const nextUrl = getServerUrl(nextServer, type, currentItem.id);
+              if (nextUrl) {
+                changeServer(nextServer);
+              }
             }
-          }
-        };
+          };
+        }, 100);
       } catch (error) {
         console.error(`Error changing to server ${server}:`, error);
       }
@@ -310,12 +320,18 @@ const API_KEY = 'f7969edc09425407417da271f5077c89';
         return parseInt(server.replace('server', ''));
       }
       return 1;
+    }    function closeModal() {
+  const modal = document.getElementById('modal');
+  if (modal) {
+    modal.classList.remove('show');
+    // delay hide to allow CSS fade-out
+    setTimeout(() => { modal.style.display = 'none'; }, 300);
+    const videoFrame = document.getElementById('modal-video');
+    if (videoFrame) {
+      videoFrame.src = '';
     }
-
-    function closeModal() {
-      document.getElementById('modal').style.display = 'none';
-      document.getElementById('modal-video').src = '';
-    }
+  }
+}
 
     function openSearchModal() {
       document.getElementById('search-modal').style.display = 'flex';
@@ -606,45 +622,82 @@ function initTheme() {
     init();
 
     function getServerUrl(server, type, id) {
-      // 1. Main servers
-      if (server === 'vidsrc.cc') {
-        return `https://vidsrc.cc/v2/embed/${type}/${id}`;
-      }
-      if (server === 'vidsrc.me') {
-        return `https://vidsrc.net/embed/${type}/?tmdb=${id}`;
-      }
-      if (server === 'player.videasy.net') {
-        return `https://player.videasy.net/${type}/${id}`;
-      }
+      if (!id) return null;
 
-      // 2. Other vidsrc servers (io, xyz, dev, etc)
-      const endpoints = type === 'movie' ? MOVIE_ENDPOINTS : TV_ENDPOINTS;
-      let serverIndex = 0;
-      if (typeof server === 'string' && server.startsWith('server')) {
-        serverIndex = parseInt(server.replace('server', '')) - 3;
+      switch(server) {
+        case 'vidsrc.cc':
+          return `https://vidsrc.cc/v2/embed/${type}/${id}`;
+        case 'vidsrc.me':
+          return `https://vidsrc.me/embed/${type}/${id}`;
+        case 'player.videasy.net':
+          return `https://player.videasy.net/${type}/${id}`;
+        default:
+          // Handle numbered servers
+          const serverNum = parseInt(server.replace('server', ''));
+          if (!isNaN(serverNum) && serverNum > 0) {
+            const endpoints = type === 'movie' ? MOVIE_ENDPOINTS : TV_ENDPOINTS;
+            const index = serverNum - 4;
+            if (index >= 0 && index < endpoints.length) {
+              if (endpoints[index].includes('gdriveplayer')) {
+                return endpoints[index] + id + (type === 'tv' ? '&s=1&e=1' : '');
+              } else if (endpoints[index].includes('playtaku')) {
+                return endpoints[index] + id + (type === 'tv' ? '&s=1&ep=1' : '');
+              }
+              return endpoints[index] + id;
+            }
+          }
+          return null;
       }
-      if (endpoints[serverIndex]) {
-        let url = endpoints[serverIndex];
-        if (url.includes('vidsrc.') && !url.includes('vidsrc.cc') && !url.includes('vidsrc.me')) {
-          return url + id;
-        }
-      }
-
-      // 3. Vidlink
-      if (endpoints[serverIndex] && endpoints[serverIndex].includes('vidlink.pro')) {
-        return endpoints[serverIndex] + id;
-      }
-
-      // 4. Remaining servers (111movies, 2embed, etc)
-      if (endpoints[serverIndex]) {
-        let url = endpoints[serverIndex];
-        if (url.includes('gdriveplayer')) {
-          return url + id + (type === 'tv' ? '&s=1&e=1' : '');
-        }
-        if (url.includes('playtaku')) {
-          return url + id + (type === 'tv' ? '&s=1&ep=1' : '');
-        }
-        return url + id;
-      }
-      return null;
     }
+
+    // Function to dynamically populate poster content
+function populatePosters(movies) {
+  const posterContainer = document.querySelector('.poster-container');
+
+  movies.forEach(movie => {
+    const poster = document.createElement('div');
+    poster.className = 'poster';
+    poster.style.backgroundImage = `url(${movie.posterUrl})`;
+
+    const ratingRing = document.createElement('div');
+    ratingRing.className = 'rating-ring';
+    ratingRing.style.setProperty('--percent', `${movie.rating}%`);
+    ratingRing.style.setProperty('--rating-color', movie.rating > 75 ? 'green' : movie.rating > 50 ? 'orange' : 'red');
+
+    const ratingPercentage = document.createElement('span');
+    ratingPercentage.className = 'rating-percentage';
+    ratingPercentage.textContent = `${movie.rating}%`;
+    ratingRing.appendChild(ratingPercentage);
+
+    const overlay = document.createElement('div');
+    overlay.className = 'poster-overlay';
+
+    const title = document.createElement('h3');
+    title.className = 'poster-title';
+    title.textContent = movie.title;
+
+    const year = document.createElement('p');
+    year.className = 'poster-year';
+    year.textContent = movie.year;
+
+    const genre = document.createElement('span');
+    genre.className = 'poster-genre';
+    genre.textContent = movie.genre;
+
+    overlay.appendChild(title);
+    overlay.appendChild(year);
+    overlay.appendChild(genre);
+
+    poster.appendChild(ratingRing);
+    poster.appendChild(overlay);
+    posterContainer.appendChild(poster);
+  });
+}
+
+// Example usage
+const movies = [
+  { title: 'A Minecraft Movie', year: '2025', genre: 'Movie', rating: 65, posterUrl: 'path-to-movie-poster.jpg' },
+  // Add more movie objects here
+];
+
+populatePosters(movies);
