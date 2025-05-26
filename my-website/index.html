@@ -40,12 +40,20 @@
     }
 
     // Check if DevTools is opened
-    setInterval(function() {
-      if (window.outerHeight - window.innerHeight > 200 || window.devtools.opened || window.Firebug?.chrome?.isInitialized) {
-        document.body.innerHTML = 'DevTools is not allowed on this site.';
-      }
-      console.log(devtools);
-    }, 1000);
+ setInterval(function() {
+  const isDevToolsOpen = () => {
+    // Don't check height difference on mobile devices
+    if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+      return window.devtools.opened || window.Firebug?.chrome?.isInitialized;
+    }
+    // On desktop, check height difference and other indicators
+    return (window.outerHeight - window.innerHeight > 200) || window.devtools.opened || window.Firebug?.chrome?.isInitialized;
+  };
+  
+  if (isDevToolsOpen()) {
+    document.body.innerHTML = 'DevTools is not allowed on this site.';
+  }
+  console.log(devtools); 1000);
 
     // Additional protection for iframes
     if (window.self !== window.top) {
