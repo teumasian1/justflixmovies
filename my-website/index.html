@@ -37,23 +37,22 @@
     devtools.toString = function() {
       this.opened = true;
       return '';
-    }
-
-    // Check if DevTools is opened
- setInterval(function() {
-  const isDevToolsOpen = () => {
-    // Don't check height difference on mobile devices
-    if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-      return window.devtools.opened || window.Firebug?.chrome?.isInitialized;
-    }
-    // On desktop, check height difference and other indicators
-    return (window.outerHeight - window.innerHeight > 200) || window.devtools.opened || window.Firebug?.chrome?.isInitialized;
-  };
-  
-  if (isDevToolsOpen()) {
-    document.body.innerHTML = 'DevTools is not allowed on this site.';
-  }
-  console.log(devtools); 1000);
+    }    // Check if DevTools is opened
+    setInterval(function() {
+      const isDevToolsOpen = () => {
+        // Don't check height difference on mobile devices
+        if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+          return window.devtools.opened || window.Firebug?.chrome?.isInitialized;
+        }
+        // On desktop, check height difference and other indicators
+        return (window.outerHeight - window.innerHeight > 200) || window.devtools.opened || window.Firebug?.chrome?.isInitialized;
+      };
+      
+      if (isDevToolsOpen()) {
+        document.body.innerHTML = 'DevTools is not allowed on this site.';
+      }
+      console.log(devtools);
+    }, 1000);
 
     // Additional protection for iframes
     if (window.self !== window.top) {
@@ -64,13 +63,12 @@
   <script defer src="js/browse.js"></script>
   <script defer src="js/home.js"></script>
 
+  <script type="text/javascript" data-cfasync="false">
+    /*<![CDATA[/* */
+    (function () { var v = window, h = "c6634ba9c225d071a868105e5fda7cc8", y = [["siteId", 491 - 310 - 538 + 873 + 5201565], ["minBid", 0], ["popundersPerIP", "0"], ["delayBetween", 0], ["default", false], ["defaultPerDay", 0], ["topmostLayer", "auto"]], f = ["d3d3LmFudGlhZGJsb2Nrc3lzdGVtcy5jb20vY2FtYXpldWkubWluLmNzcw==", "ZDNjb2Q8MHRobjdxbmQuY2xvdWRmcm9udC5uZXQvUXhTSFQvYXR3aXgubWluLmpz"], s = -1, a, j, n = function () { clearTimeout(j); s++; if (f[s] && !(1773925395000 < (new Date).getTime() && 1 < s)) { a = v.document.createElement("script"); a.type = "text/javascript"; a.async = !0; var b = v.document.getElementsByTagName("script")[0]; a.src = "https://" + atob(f[s]); a.crossOrigin = "anonymous"; a.onerror = n; a.onload = function () { clearTimeout(j); v[h.slice(0, 16) + h.slice(0, 16)] || n() }; j = setTimeout(n, 5E3); b.parentNode.insertBefore(a, b) } }; if (!v[h]) { try { Object.freeze(v[h] = y) } catch (e) { } n() } })();
+    /*]]>/* */
+  </script>
 
-<script type="text/javascript" data-cfasync="false">
-/*<![CDATA[/* */
-(function(){var v=window,h="c6634ba9c225d071a868105e5fda7cc8",y=[["siteId",491-310-538+873+5201565],["minBid",0],["popundersPerIP","0"],["delayBetween",0],["default",false],["defaultPerDay",0],["topmostLayer","auto"]],f=["d3d3LmFudGlhZGJsb2Nrc3lzdGVtcy5jb20vY2FtYXpldWkubWluLmNzcw==","ZDNjb2Q4MHRobjdxbmQuY2xvdWRmcm9udC5uZXQvUXhTSFQvYXR3aXgubWluLmpz"],s=-1,a,j,n=function(){clearTimeout(j);s++;if(f[s]&&!(1773925395000<(new Date).getTime()&&1<s)){a=v.document.createElement("script");a.type="text/javascript";a.async=!0;var b=v.document.getElementsByTagName("script")[0];a.src="https://"+atob(f[s]);a.crossOrigin="anonymous";a.onerror=n;a.onload=function(){clearTimeout(j);v[h.slice(0,16)+h.slice(0,16)]||n()};j=setTimeout(n,5E3);b.parentNode.insertBefore(a,b)}};if(!v[h]){try{Object.freeze(v[h]=y)}catch(e){}n()}})();
-/*]]>/* */
-</script>
-  
 </head>
 
 <body>  <div class="navbar">
@@ -190,8 +188,12 @@
     </div>
 
     <div class="row">
-      <h2>Trending Movies</h2>
-      <div class="list" id="movies-list"></div>
+      <div class="row-header">
+        <h2>Trending Movies</h2>
+      </div>
+      <div class="list-wrapper">
+        <div class="list" id="movies-list"></div>
+      </div>
     </div>
 
     <div class="row">
@@ -204,23 +206,35 @@
       <div class="list" id="anime-list"></div>
     </div>    <div class="row">
       <h2>Korean Dramas</h2>
-      <div class="list" id="kdramas-list"></div>
+      <div class="list" id="kdramas-list">
+        <!-- Example of latest Korean drama -->
+        <div class="poster-container">
+          <div class="poster">
+            <img src="path-to-latest-kdrama-poster.jpg" alt="Latest Korean Drama Poster">
+            <div class="poster-overlay">
+              <h3 class="poster-title">Latest Korean Drama</h3>
+              <p class="poster-year">2025</p>
+              <span class="poster-genre">Drama</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
   <div class="modal" id="modal">
     <div class="modal-content">
-      <span class="close" onclick="closeModal()"><i class="fas fa-times"></i></span>
+      <button class="close-button" onclick="closeModal()">&times;</button>
       
       <div class="video-section">
         <iframe id="modal-video" frameborder="0" allowfullscreen allow="autoplay; fullscreen"></iframe>
         
         <div class="server-selector">
-          <h3><i class="fas fa-server"></i> Available Servers</h3>
           <div class="server-buttons" id="server-buttons">
             <!-- Server buttons will be populated dynamically -->
           </div>
         </div>
-      </div>      <div class="modal-body">
+      </div>
+      <div class="modal-body">
         <div class="modal-image">
           <img id="modal-image" src="" alt="" />
         </div>
@@ -236,6 +250,8 @@
       </div>
     </div>
   </div>
+
+ 
 <footer class="footer"><div class="footer-content">
     <p>JustFlixMovies does not host any files; it merely pulls streams from third-party services.</p>
     <p>Legal issues should be taken up with the file hosts and providers. JustFlixMovies is not responsible for any media files shown by the video providers.</p>
