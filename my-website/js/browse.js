@@ -83,6 +83,10 @@ function updatePagination() {
 function initBrowseView() {
   populateYearFilter();
   fetchFilteredContent();
+
+  // Ensure browse content is styled like the main content area
+  const browseContent = document.getElementById('browse-content');
+  browseContent.classList.add('content-area');
 }
 
 function toggleBrowseView() {
