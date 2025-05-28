@@ -1,5 +1,7 @@
+import { API_KEY, BASE_URL, IMG_URL } from './videoModal.js';
+
 // Genre categories
-const genres = [
+export const genres = [
     { id: 28, name: "Action" },
     { id: 12, name: "Adventure" },
     { id: 16, name: "Animation" },
@@ -18,18 +20,18 @@ const genres = [
     { id: 53, name: "Thriller" }
 ];
 
-async function fetchByGenre(genreId, type = 'movie') {
+export async function fetchByGenre(genreId, type = 'movie') {
     const res = await fetch(`${BASE_URL}/discover/${type}?api_key=${API_KEY}&with_genres=${genreId}`);
     const data = await res.json();
     return data.results;
 }
 
-function toggleGenreMenu() {
+export function toggleGenreMenu() {
     const menu = document.getElementById('genre-menu');
     menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
 }
 
-async function filterByGenre(genreId, type) {
+export async function filterByGenre(genreId, type) {
     const results = await fetchByGenre(genreId, type);
     displayList(results, 'movies-list');
     // Scroll to results
