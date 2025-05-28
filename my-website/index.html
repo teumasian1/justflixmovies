@@ -1,98 +1,224 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>My Website</title>
-  <link rel="stylesheet" href="css/home.css">
-  <link rel="preload" href="css/home.css" as="style">
-  <link rel="preload" href="js/home.js" as="script">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="referrer" content="no-referrer">
+  <title>My Website</title>    <!-- Stylesheets with preload -->
+  <link rel="stylesheet" href="css/home.css" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="css/videoModal.css" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="css/browse.css" media="print" onload="this.media='all'">
+  
+  <!-- Module preloads -->
+  <link rel="modulepreload" href="js/videoModal.js">
+  <link rel="modulepreload" href="js/home.js">
+  <link rel="modulepreload" href="js/genres.js">
+  <link rel="modulepreload" href="js/browse.js">
+  
+  <!-- Fallback for no-JS -->
+  <noscript>
+    <link rel="stylesheet" href="css/home.css">
+    <link rel="stylesheet" href="css/videoModal.css">
+    <link rel="stylesheet" href="css/browse.css">
+  </noscript>
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <!-- Anti-DevTools Protection -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous">
+  
+  <!-- Scripts with proper attributes -->
+  <script type="module" src="js/videoModal.js" defer></script>
+  <script type="module" src="js/genres.js" defer></script>
+  <script type="module" src="js/browse.js" defer></script>
+  <script type="module" src="js/home.js" defer></script>
+  
+  <!-- Anti-devtools protection -->
   <script>
-    // Disable right-click
-    document.addEventListener('contextmenu', (e) => e.preventDefault());
-
-    // Disable keyboard shortcuts
-    document.addEventListener('keydown', (e) => {
-      // Disable F12
-      if (e.key === 'F12') {
-        e.preventDefault();
-        return false;
+    // Detect and prevent DevTools
+    let devtools = function() {};
+    devtools.toString = function() {
+      if (!isFullscreen()) {
+        document.body.innerHTML = '';
+        window.location.reload();
       }
-      // Disable Ctrl+Shift+I and Ctrl+Shift+J
-      if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j')) {
-        e.preventDefault();
-        return false;
-      }
-      // Disable Ctrl+U (view source)
-      if (e.ctrlKey && (e.key === 'U' || e.key === 'u')) {
-        e.preventDefault();
-        return false;
+      return 'DevTools disabled';
+    }
+    
+    // Check if video is in fullscreen
+    function isFullscreen() {
+      return !!(document.fullscreenElement || 
+                document.webkitFullscreenElement || 
+                document.mozFullScreenElement ||
+                document.msFullscreenElement ||
+                document.querySelector('.video-container.fullscreen'));
+    }
+    
+    // Prevent right-click except on video
+    document.addEventListener('contextmenu', event => {
+      if (!event.target.closest('.video-container')) {
+        event.preventDefault();
       }
     });
 
-    // Detect DevTools opening
-    let devtools = function() {};
-    devtools.toString = function() {
-      this.opened = true;
-      return '';
-    }    // Check if DevTools is opened
-    setInterval(function() {
-      const isDevToolsOpen = () => {
-        // Don't check height difference on mobile devices
-        if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-          return window.devtools.opened || window.Firebug?.chrome?.isInitialized;
+    // Detect DevTools
+    (function detectDevTools() {
+      const threshold = 160;
+      const checkDevTools = () => {
+        if (isFullscreen()) return;
+        
+        const widthThreshold = window.outerWidth - window.innerWidth > threshold;
+        const heightThreshold = window.outerHeight - window.innerHeight > threshold;
+        if (widthThreshold || heightThreshold) {
+          document.body.innerHTML = '';
+          window.location.reload();
         }
-        // On desktop, check height difference and other indicators
-        return (window.outerHeight - window.innerHeight > 200) || window.devtools.opened || window.Firebug?.chrome?.isInitialized;
-      };
-      
-      if (isDevToolsOpen()) {
-        document.body.innerHTML = 'DevTools is not allowed on this site.';
       }
-      console.log(devtools);
-    }, 1000);
-
-    // Additional protection for iframes
-    if (window.self !== window.top) {
-      window.top.location.href = window.self.location.href;
-    }
+      
+      window.addEventListener('resize', () => {
+        if (!isFullscreen()) {
+          checkDevTools();
+        }
+      });
+      
+      setInterval(() => {
+        if (!isFullscreen()) {
+          checkDevTools();
+        }
+      }, 1000);
+      
+      // Prevent keyboard shortcuts except during fullscreen
+      window.addEventListener('keydown', (event) => {
+        if (!isFullscreen() && (
+          (event.ctrlKey && event.shiftKey && event.key === 'I') ||
+          (event.ctrlKey && event.shiftKey && event.key === 'J') ||
+          (event.ctrlKey && event.shiftKey && event.key === 'C') ||
+          (event.ctrlKey && event.key === 'U') ||
+          event.key === 'F12'
+        )) {
+          event.preventDefault();
+        }
+      });
+      
+      // Additional protection
+      (() => {
+        function ban() {
+          if (!isFullscreen()) {
+            document.body.innerHTML = '';
+            window.location.reload();
+          }
+        }
+        
+        const checkConsole = () => {
+          if (isFullscreen()) return;
+          const d = new Date();
+          const check1 = d.getTime();
+          debugger;
+          const check2 = new Date().getTime();
+          if (check2 - check1 > 100) ban();
+        };
+        
+        setInterval(checkConsole, 1000);
+      })();
+    })();
   </script>
-  <script defer src="js/genres.js"></script>
-  <script defer src="js/browse.js"></script>
-  <script defer src="js/home.js"></script>
-
-  <script type="text/javascript" data-cfasync="false">
-    /*<![CDATA[/* */
-    (function () { var v = window, h = "c6634ba9c225d071a868105e5fda7cc8", y = [["siteId", 491 - 310 - 538 + 873 + 5201565], ["minBid", 0], ["popundersPerIP", "0"], ["delayBetween", 0], ["default", false], ["defaultPerDay", 0], ["topmostLayer", "auto"]], f = ["d3d3LmFudGlhZGJsb2Nrc3lzdGVtcy5jb20vY2FtYXpldWkubWluLmNzcw==", "ZDNjb2Q8MHRobjdxbmQuY2xvdWRmcm9udC5uZXQvUXhTSFQvYXR3aXgubWluLmpz"], s = -1, a, j, n = function () { clearTimeout(j); s++; if (f[s] && !(1773925395000 < (new Date).getTime() && 1 < s)) { a = v.document.createElement("script"); a.type = "text/javascript"; a.async = !0; var b = v.document.getElementsByTagName("script")[0]; a.src = "https://" + atob(f[s]); a.crossOrigin = "anonymous"; a.onerror = n; a.onload = function () { clearTimeout(j); v[h.slice(0, 16) + h.slice(0, 16)] || n() }; j = setTimeout(n, 5E3); b.parentNode.insertBefore(a, b) } }; if (!v[h]) { try { Object.freeze(v[h] = y) } catch (e) { } n() } })();
-    /*]]>/* */
+  
+  <!-- Anti-interference script -->
+  <script>
+    // Prevent script blocking
+    window.addEventListener('error', function(e) {
+      if (e.message.includes('ReferenceError')) {
+        console.warn('Blocked script detected, retrying load...');
+        const scripts = document.getElementsByTagName('script');
+        for (let script of scripts) {
+          if (script.type === 'module') {
+            const newScript = document.createElement('script');
+            newScript.type = 'module';
+            newScript.src = script.src;
+            newScript.defer = true;
+            script.parentNode.replaceChild(newScript, script);
+          }
+        }
+      }
+    });
   </script>
+
+<script type="text/javascript" data-cfasync="false">
+  /*<![CDATA[/* */
+  (function () { var v = window, h = "c6634ba9c225d071a868105e5fda7cc8", y = [["siteId", 491 - 310 - 538 + 873 + 5201565], ["minBid", 0], ["popundersPerIP", "0"], ["delayBetween", 0], ["default", false], ["defaultPerDay", 0], ["topmostLayer", "auto"]], f = ["d3d3LmFudGlhZGJsb2Nrc3lzdGVtcy5jb20vY2FtYXpldWkubWluLmNzcw==", "ZDNjb2Q8MHRobjdxbmQuY2xvdWRmcm9udC5uZXQvUXhTSFQvYXR3aXgubWluLmpz"], s = -1, a, j, n = function () { clearTimeout(j); s++; if (f[s] && !(1773925395000 < (new Date).getTime() && 1 < s)) { a = v.document.createElement("script"); a.type = "text/javascript"; a.async = !0; var b = v.document.getElementsByTagName("script")[0]; a.src = "https://" + atob(f[s]); a.crossOrigin = "anonymous"; a.onerror = n; a.onload = function () { clearTimeout(j); v[h.slice(0, 16) + h.slice(0, 16)] || n() }; j = setTimeout(n, 5E3); b.parentNode.insertBefore(a, b) } }; if (!v[h]) { try { Object.freeze(v[h] = y) } catch (e) { } n() } })();
+  /*]]>/* */
+</script>
 
 </head>
 
-<body>  <div class="navbar">
-    <img src="lulu.png" alt="LOGO HERE" style="cursor:pointer;" onclick="window.location.href='index.html'" />    <div class="nav-links">
+<body>  <div class="navbar">    <img src="lulu.png" alt="LOGO HERE" style="cursor:pointer;" id="logo" />    <div class="nav-links">
       <a href="index.html">Home</a>
-      <button onclick="toggleBrowseView()" class="browse-btn">Browse <i class="fas fa-film"></i></button>
+      <button class="browse-btn" id="browse-btn">Browse <i class="fas fa-film"></i></button>
       <div class="search-container">
-        <input type="text" class="search-bar" id="navbar-search" placeholder="Search..." oninput="searchTMDB()" />
+        <input type="text" class="search-bar" id="navbar-search" placeholder="Search..." />
       </div>
-      <button onclick="toggleTheme()" class="theme-toggle">
+      <button class="theme-toggle" id="theme-toggle">
         <i class="fas fa-moon dark-icon"></i>
         <i class="fas fa-sun light-icon"></i>
       </button>
     </div>
-  </div>
-
-  <div id="search-results" class="search-results-container">
+  </div>  <div id="search-results" class="search-results-container" style="display: none;">
     <div class="browse-grid" id="navbar-search-results"></div>
   </div>
 
-  <div id="browse-content"style="display: none;">
-    <div class="filters-container">      <div class="filter-group">
-        <label>Content Type</label>
-        <select id="type-filter" onchange="updateFilter('type', this.value)">
+  <div id="main-content" style="display: block;">
+    <div class="banner" id="banner">
+      <div class="banner-content">
+        <h1 id="banner-title"></h1>
+        <p id="banner-overview"></p>
+        <div class="banner-buttons">
+          <button class="banner-button play" id="banner-play-button">
+            <i class="fas fa-play"></i> Play
+          </button>
+          <button class="banner-button more-info" id="banner-info-button">
+            <i class="fas fa-info-circle"></i> More Info
+          </button>
+        </div>
+      </div>
+    </div>    <div class="row">
+      <div class="row-header">
+        <h2>Trending Movies</h2>
+      </div>      <div class="list-wrapper">
+        <div class="list" id="movies-list"></div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="row-header">
+        <h2>Trending TV Shows</h2>
+      </div>      <div class="list-wrapper">
+        <div class="list" id="tvshows-list"></div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="row-header">
+        <h2>Trending Anime</h2>
+      </div>      <div class="list-wrapper">
+        <div class="list" id="anime-list"></div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="row-header">
+        <h2>Korean Dramas</h2>
+      </div>      <div class="list-wrapper">
+        <div class="list" id="kdramas-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="browse-content" style="display: none;">
+    <!-- Loading spinner -->
+    <div id="loading-spinner" class="loading-spinner">
+      <div class="spinner"></div>
+    </div>
+    
+    <div class="filters-container"><div class="filter-group">
+        <label>Content Type</label>        <select id="type-filter">
           <option value="movie">Movies</option>
           <option value="tv">TV Shows</option>
         </select>
@@ -100,7 +226,7 @@
 
       <div class="filter-group">
         <label>Genre</label>
-        <select id="genre-filter" onchange="updateFilter('genre', this.value)">
+        <select id="genre-filter">
           <option value="">All Genres</option>
           <option value="28">Action</option>
           <option value="12">Adventure</option>
@@ -122,15 +248,14 @@
       </div>
 
       <div class="filter-group">
-        <label>Year</label>
-        <select id="year-filter" onchange="updateFilter('year', this.value)">
+        <label>Year</label>        <select id="year-filter">
           <!-- Will be populated by JavaScript -->
         </select>
       </div>
 
       <div class="filter-group">
         <label>Country</label>
-        <select id="country-filter" onchange="updateFilter('country', this.value)">
+        <select id="country-filter">
           <option value="">All Countries</option>
           <option value="US">United States</option>
           <option value="GB">United Kingdom</option>
@@ -147,7 +272,7 @@
 
       <div class="filter-group">
         <label>Sort By</label>
-        <select onchange="updateFilter('sort', this.value)">
+        <select id="sort-filter">
           <option value="popularity.desc">Popularity</option>
           <option value="vote_average.desc">Rating</option>
           <option value="release_date.desc">Release Date</option>
@@ -162,90 +287,56 @@
 
     <div id="browse-results" class="browse-results">
       <!-- Results will be populated here -->
-    </div>
-    <div class="pagination" id="pagination">
-      <button id="prev-page" onclick="changePage('prev')">&laquo; Prev</button>
+    </div>    <div class="pagination" id="pagination">
+      <button id="prev-page">&laquo; Prev</button>
       <div id="page-numbers"></div>
-      <button id="next-page" onclick="changePage('next')">Next &raquo;</button>
+      <button id="next-page">Next &raquo;</button>
       <span class="page-info" id="page-info"></span>
     </div>
   </div>
-
-  <div id="main-content">
-    <div class="banner" id="banner">
-      <div class="banner-content">
-        <h1 id="banner-title"></h1>
-        <p id="banner-overview"></p>
-        <div class="banner-buttons">
-          <button class="banner-button play" onclick="showDetails(currentBannerItem)">
-            <i class="fas fa-play"></i> Play
-          </button>
-          <button class="banner-button more-info" onclick="showDetails(currentBannerItem)">
-            <i class="fas fa-info-circle"></i> More Info
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <div class="row">
-      <div class="row-header">
-        <h2>Trending Movies</h2>
-      </div>
-      <div class="list-wrapper">
-        <div class="list" id="movies-list"></div>
-      </div>
-    </div>
-
-    <div class="row">
-      <h2>Trending TV Shows</h2>
-      <div class="list" id="tvshows-list"></div>
-    </div>
-
-    <div class="row">
-      <h2>Trending Anime</h2>
-      <div class="list" id="anime-list"></div>
-    </div>    <div class="row">
-      <h2>Korean Dramas</h2>
-      <div class="list" id="kdramas-list">
-        <!-- Example of latest Korean drama -->
-        <div class="poster-container">
-          <div class="poster">
-            <img src="path-to-latest-kdrama-poster.jpg" alt="Latest Korean Drama Poster">
-            <div class="poster-overlay">
-              <h3 class="poster-title">Latest Korean Drama</h3>
-              <p class="poster-year">2025</p>
-              <span class="poster-genre">Drama</span>
+<div class="modal" id="modal">
+      <button class="close-button" id="modal-close-button">&times;</button>
+      <div class="modal-content">
+      <div class="modal-main">
+        <div class="video-section">
+          <div class="server-selector">
+            <div class="server-buttons" id="server-buttons">
+              <!-- Server buttons will be populated dynamically -->
+            </div>
+          </div>
+          <div class="video-wrapper">
+            <div class="video-container">
+              <iframe id="modal-video" 
+                frameborder="0"
+                allowfullscreen
+                webkitallowfullscreen
+                mozallowfullscreen
+              ></iframe>
             </div>
           </div>
         </div>
-      </div>
-    </div>
-  </div>
-  <div class="modal" id="modal">
-    <div class="modal-content">
-      <button class="close-button" onclick="closeModal()">&times;</button>
-      
-      <div class="video-section">
-        <iframe id="modal-video" frameborder="0" allowfullscreen allow="autoplay; fullscreen"></iframe>
-        
-        <div class="server-selector">
-          <div class="server-buttons" id="server-buttons">
-            <!-- Server buttons will be populated dynamically -->
+        <div class="modal-body">
+          <div class="modal-image">
+            <img id="modal-image" src="" alt="" />
+          </div>
+          <div class="modal-text">
+            <h2 id="modal-title"></h2>
+            <div class="modal-meta">
+              <div class="stars" id="modal-rating"></div>
+              <span class="release-date" id="modal-year">2025</span>
+              <span class="genre" id="modal-genre">Action, Crime</span>
+            </div>
+            <p id="modal-description"></p>
+          </div>
+        </div>      </div>      <div class="episodes-section">
+        <div class="seasons-bar">
+          <h3>Seasons</h3>
+          <div class="season-tabs" id="season-tabs">
+            <!-- Season tabs will be populated dynamically -->
           </div>
         </div>
-      </div>
-      <div class="modal-body">
-        <div class="modal-image">
-          <img id="modal-image" src="" alt="" />
-        </div>
-        <div class="modal-text">
-          <h2 id="modal-title"></h2>
-          <div class="modal-meta">
-            <div class="stars" id="modal-rating"></div>
-            <span class="release-date" id="modal-year">2025</span>
-            <span class="genre" id="modal-genre">Action, Crime</span>
-          </div>
-          <p id="modal-description"></p>
+        <div class="episodes-list" id="episodes-list">
+          <!-- Episodes will be populated dynamically -->
         </div>
       </div>
     </div>
@@ -258,10 +349,15 @@
     <div class="footer-links">
       <a href="#">Disclaimer</a>
       <a href="#">About Us</a>
-      <a href="#">Contact Us</a>
-    </div>
-  </div>
+      <a href="#">Contact Us</a>    </div>  </div>
 </footer>
+
+<!-- Load JavaScript modules -->
+<script type="module" src="js/videoModal.js"></script>
+<script type="module" src="js/browse.js"></script>
+<script type="module" src="js/genres.js"></script>
+<script type="module" src="js/home.js"></script>
 
   
 </body>
+</html>
