@@ -1,48 +1,85 @@
-const API_KEY = 'f7969edc09425407417da271f5077c89';
-    const BASE_URL = 'https://api.themoviedb.org/3';
-    const IMG_URL = 'https://image.tmdb.org/t/p/original';
-    let currentItem;
-    let bannerItems = [];
-    let currentBannerIndex = 0;
-    let bannerInterval;
+import { 
+    showDetails, 
+    closeModal, 
+    initVideoModalEvents,
+    API_KEY,
+    BASE_URL,
+    IMG_URL,
+    BACKDROP_URL,
+    POSTER_URL,
+    currentItem,
+    createStarRating
+} from './videoModal.js';
 
-    // Remove vidsrc.me from endpoints and server logic
-    const MOVIE_ENDPOINTS = [
-      'https://vidlink.pro/movie/',
-      'https://111movies.com/movie/',
-      'https://vidjoy.pro/embed/movie/',
-      'https://vidsrc.io/embed/movie/',
-      'https://vidsrc.cc/v2/embed/movie/',
-      'https://vidsrc.xyz/embed/movie/',
-      'https://www.2embed.cc/embed/',
-      'https://moviesapi.club/movie/',
-      'https://multiembed.mov/embed/movie/',
-      'https://embedmovie.net/movie/',
-      'https://database.gdriveplayer.us/player.php?imdb=',
-      'https://player.videasy.net/movie/'
-    ];
-    
-    const TV_ENDPOINTS = [
-      'https://vidlink.pro/tv/',
-      'https://111movies.com/tv/',
-      'https://vidjoy.pro/embed/tv/',
-      'https://vidsrc.io/embed/tv/',
-      'https://vidsrc.cc/v2/embed/tv/',
-      'https://vidsrc.xyz/embed/tv/',
-      'https://www.2embed.cc/embedtv/',
-      'https://moviesapi.club/tv/',
-      'https://multiembed.mov/embed/tv/',
-      'https://embedmovie.net/tv/',
-      'https://player.videasy.net/tv/'
-    ];
+import {
+    toggleBrowseView,
+    updateFilter,
+    initBrowseView,
+    changePage
+} from './browse.js';
 
-    async function fetchTrending(type) {
-      const res = await fetch(`${BASE_URL}/trending/${type}/week?api_key=${API_KEY}`);
-      const data = await res.json();
-      return data.results;
+// Error handling and retry configuration
+const MAX_INIT_RETRIES = 3;
+const INIT_RETRY_DELAY = 1000;
+
+// Retry wrapper
+async function withRetry(fn, name = 'operation', retries = MAX_INIT_RETRIES) {
+    for (let i = 0; i < retries; i++) {
+        try {
+            return await fn();
+        } catch (error) {
+            console.warn(`Attempt ${i + 1} failed for ${name}:`, error);
+            if (i === retries - 1) throw error;
+            await new Promise(resolve => setTimeout(resolve, INIT_RETRY_DELAY));
+        }
     }
+}
 
-    async function fetchTrendingAnime() {
+// Expose functions needed by HTML with error handling
+window.toggleBrowseView = (...args) => withRetry(() => toggleBrowseView(...args), 'toggleBrowseView');
+window.updateFilter = (...args) => withRetry(() => updateFilter(...args), 'updateFilter');
+window.initBrowseView = (...args) => withRetry(() => initBrowseView(...args), 'initBrowseView');
+window.changePage = (...args) => withRetry(() => changePage(...args), 'changePage');
+window.showDetails = (...args) => withRetry(() => showDetails(...args), 'showDetails');
+window.closeModal = (...args) => withRetry(() => closeModal(...args), 'closeModal');
+
+// Initialize with retry mechanism
+document.addEventListener('DOMContentLoaded', () => {
+    withRetry(() => {
+        // Initialize video modal events
+        initVideoModalEvents();
+        // Initialize the application
+        return init();
+    }, 'initialization').catch(error => {
+        console.error('Critical initialization error:', error);
+        // Show user-friendly error message
+        const mainContent = document.getElementById('main-content');
+        if (mainContent) {
+            mainContent.innerHTML = `
+                <div class="error-message" style="text-align: center; padding: 2rem;">
+                    <h2>Oops! Something went wrong</h2>
+                    <p>Please refresh the page to try again.</p>
+                </div>
+            `;
+        }
+    });
+});
+
+let currentBannerItem;
+
+// Keep the movie-related constants
+let bannerItems = [];
+let currentBannerIndex = 0;
+let bannerInterval;
+
+async function fetchTrending(type) {
+  const res = await fetch(`${BASE_URL}/trending/${type}/week?api_key=${API_KEY}`);
+  const data = await res.json();
+  console.log(`Fetched ${type} data:`, data.results);
+  return data.results;
+}
+
+async function fetchTrendingAnime() {
   let allResults = [];
 
   // Fetch from multiple pages to get more anime (max 3 pages for demo)
@@ -58,464 +95,256 @@ const API_KEY = 'f7969edc09425407417da271f5077c89';
   return allResults;
 }
 
+async function fetchTrendingKDramas() {
+  let allResults = [];
+  
+  // Fetch from multiple pages to get more K-dramas
+  for (let page = 1; page <= 3; page++) {
+    const res = await fetch(`${BASE_URL}/discover/tv?api_key=${API_KEY}&with_original_language=ko&sort_by=popularity.desc&first_air_date.gte=2024-01-01&first_air_date.lte=2025-12-31&page=${page}`);
+    const data = await res.json();
+    // Filter to ensure we only get Korean dramas (exclude variety shows, etc.)
+    const filtered = data.results.filter(item => 
+      item.genre_ids.includes(18) // Drama genre
+    );
+    allResults = allResults.concat(filtered);
+  }
+  
+  // Sort by popularity and return top results
+  return allResults.sort((a, b) => b.popularity - a.popularity);
+}
 
-    async function fetchTrendingKDramas() {
-      let allResults = [];
-      
-      // Fetch from multiple pages to get more K-dramas
-      for (let page = 1; page <= 3; page++) {
-        const res = await fetch(`${BASE_URL}/discover/tv?api_key=${API_KEY}&with_original_language=ko&sort_by=popularity.desc&first_air_date.gte=2024-01-01&first_air_date.lte=2025-12-31&page=${page}`);
-        const data = await res.json();
-        // Filter to ensure we only get Korean dramas (exclude variety shows, etc.)
-        const filtered = data.results.filter(item => 
-          item.genre_ids.includes(18) // Drama genre
-        );
-        allResults = allResults.concat(filtered);
-      }
-      
-      // Sort by popularity and return top results
-      return allResults.sort((a, b) => b.popularity - a.popularity);
+// Banner functions
+function displayBanner(item) {
+    currentBannerItem = item;
+    const banner = document.getElementById('banner');
+    banner.style.backgroundImage = `url(${BACKDROP_URL}${item.backdrop_path})`;
+    document.getElementById('banner-title').textContent = item.title || item.name;
+    document.getElementById('banner-overview').textContent = item.overview;
+}
+
+function nextBanner() {
+    currentBannerIndex = (currentBannerIndex + 1) % bannerItems.length;
+    displayBanner(bannerItems[currentBannerIndex]);
+}
+
+function startBannerSlideshow() {
+    if (bannerInterval) {
+        clearInterval(bannerInterval);
     }
+    bannerInterval = setInterval(nextBanner, 5000); // Change banner every 5 seconds
+}
 
-    function displayBanner(item) {
-        currentBannerItem = item;
-        const banner = document.getElementById('banner');
-        banner.style.backgroundImage = `url(${IMG_URL}${item.backdrop_path})`;
-        document.getElementById('banner-title').textContent = item.title || item.name;
-        document.getElementById('banner-overview').textContent = item.overview;
-    }
-
-    function nextBanner() {
-        currentBannerIndex = (currentBannerIndex + 1) % bannerItems.length;
-        displayBanner(bannerItems[currentBannerIndex]);
-    }
-
-    function startBannerSlideshow() {
-        if (bannerInterval) {
-            clearInterval(bannerInterval);
-        }
-        bannerInterval = setInterval(nextBanner, 5000); // Change banner every 5 seconds
-    }    async function displayList(items, containerId) {
-  const container = document.getElementById(containerId);
-  container.innerHTML = '';
-  
-  // First, display all posters immediately
-  items.forEach(item => {
-    if (!item.poster_path) return;
+// Video availability checking
+async function checkVideoAvailability(item) {
+    if (!item) return false;
+    const type = item.media_type || (item.first_air_date ? 'tv' : 'movie');
     
-    const posterContainer = document.createElement('div');
-    posterContainer.className = 'poster-container';
-    posterContainer.dataset.itemId = item.id; // Add ID for reference
+    // Create an array of URLs to check in parallel
+    const urls = [
+        `https://vidsrc.cc/v2/embed/${type}/${item.id}`,
+        `https://player.videasy.net/${type}/${item.id}`
+    ];
     
-    const img = document.createElement('img');
-    img.src = `${IMG_URL}${item.poster_path}`;
-    img.alt = item.title || item.name;
-    
-    const overlay = document.createElement('div');
-    overlay.className = 'poster-overlay';
-    
-    const title = document.createElement('h3');
-    title.className = 'poster-title';
-    title.textContent = item.title || item.name;
-    
-    const rating = document.createElement('div');
-    rating.className = 'rating-circle';
-    const percent = Math.round(item.vote_average * 10);
-    rating.textContent = `${percent}%`;
-    rating.style.setProperty('--percent', percent);
-    posterContainer.appendChild(rating);
-    
-    const releaseYear = document.createElement('div');
-    releaseYear.className = 'poster-year';
-    releaseYear.textContent = new Date(item.release_date || item.first_air_date).getFullYear();
-    
-    const description = document.createElement('div');
-    description.className = 'poster-description';
-    description.textContent = item.overview;
-    
-    overlay.appendChild(title);
-    overlay.appendChild(rating);
-    overlay.appendChild(releaseYear);
-    overlay.appendChild(description);
-      posterContainer.appendChild(img);
-    posterContainer.appendChild(overlay);
-    container.appendChild(posterContainer);
-    
-    // Make content immediately clickable
-    posterContainer.style.opacity = '1';
-    posterContainer.onclick = (e) => {
-  e.preventDefault();
-  showDetails(item);
-};
-  });
-
-  // Then check availability in parallel
-  const availabilityChecks = items
-    .filter(item => item.poster_path)
-    .map(async item => {
-      try {
-        const isAvailable = await checkVideoAvailability(item);
-        const posterContainer = container.querySelector(`[data-itemId="${item.id}"]`);
-        if (!posterContainer) return;
-
-        if (!isAvailable) {
-          posterContainer.remove();
-        }
-      } catch (error) {
-        console.error('Error checking availability:', error);
-      }
-    });
-
-  // Wait for all checks to complete
-  await Promise.all(availabilityChecks);
-}  async function showDetails(item) {
-  currentItem = item;
-  const modal = document.getElementById('modal');
-  modal.style.display = 'flex';
-  modal.classList.add('show');
-  document.getElementById('modal-title').textContent = item.title || item.name;
-  document.getElementById('modal-description').textContent = item.overview;
-  document.getElementById('modal-image').src = `${IMG_URL}${item.poster_path}`;
-  document.getElementById('modal-rating').innerHTML = '★'.repeat(Math.round(item.vote_average / 2));
-  document.getElementById('modal-year').textContent = new Date(item.release_date || item.first_air_date).getFullYear();
-  
-  // Set media type
-  currentItem.media_type = currentItem.media_type || (currentItem.first_air_date ? 'tv' : 'movie');
-  
-  // Populate server buttons
-  populateServerButtons();
-  
-  // Try all servers in order and select the first working one
-  const type = currentItem.media_type;
-  const endpoints = type === 'movie' ? MOVIE_ENDPOINTS : TV_ENDPOINTS;
-  const servers = [
-    { id: 'vidsrc.cc' },
-    { id: 'vidsrc.me' },
-    { id: 'player.videasy.net' },
-    ...endpoints.map((_, i) => ({ id: `server${i + 3}` }))
-  ];
-
-  let found = false;
-  for (let i = 0; i < servers.length; i++) {
-    const serverId = servers[i].id;
-    const url = getServerUrl(serverId, type, currentItem.id);
-    if (!url) continue;
-
     try {
-      const response = await fetch(url, { method: 'HEAD', mode: 'no-cors' });
-      if (response.ok || response.type === 'opaque') {
-        changeServer(serverId);
-        const buttons = document.querySelectorAll('.server-btn');
-        buttons.forEach(btn => btn.classList.remove('active'));
-        const activeButton = Array.from(buttons).find(btn => {
-          if (serverId.startsWith('server')) {
-            return btn.textContent.trim() === `Server ${serverId.replace('server', '')}`;
-          } else if (serverId === 'vidsrc.cc') {
-            return btn.textContent.trim() === 'Server 1';
-          } else if (serverId === 'vidsrc.me') {
-            return btn.textContent.trim() === 'Server 2';
-          }
-          return false;
-        });
-        if (activeButton) activeButton.classList.add('active');
-        found = true;
-        break;
-      }
-    } catch (e) {
-      // Try next
-    }
-  }
+        const checks = urls.map(url => 
+            fetch(url, { 
+                method: 'HEAD', 
+                mode: 'no-cors',
+                signal: AbortSignal.timeout(3000) // 3 second timeout
+            })
+            .then(response => response.type === 'opaque' || response.ok)
+            .catch(() => false)
+        );
 
-  // If none work, fallback to first
-  if (!found) {
-    changeServer('vidsrc.cc');
-    const buttons = document.querySelectorAll('.server-btn');
-    buttons.forEach(btn => btn.classList.remove('active'));
-    const activeButton = Array.from(buttons).find(btn => btn.textContent.trim() === 'Server 1');
-    if (activeButton) activeButton.classList.add('active');
-  }
-}
-
-    function populateServerButtons() {
-      const type = currentItem.media_type || (currentItem.first_air_date ? 'tv' : 'movie');
-      const endpoints = type === 'movie' ? MOVIE_ENDPOINTS : TV_ENDPOINTS;
-      const container = document.getElementById('server-buttons');
-      container.innerHTML = '';
-      // Restore Server 2 (vidsrc.me)
-      const servers = [
-        { name: 'Server 1', id: 'vidsrc.cc' },
-        { name: 'Server 2', id: 'vidsrc.me' },
-        { name: 'Server 3', id: 'player.videasy.net' },
-        ...endpoints.map((_, i) => ({ name: `Server ${i + 4}`, id: `server${i + 4}` }))
-      ];
-      servers.forEach((server, index) => {
-        const button = document.createElement('button');
-        button.className = 'server-btn';
-        button.textContent = server.name;
-        button.onclick = () => changeServer(server.id);
-        if (index === 0) button.classList.add('active');
-        container.appendChild(button);
-      });
-    }    function changeServer(server) {
-      if (!currentItem) return;
-
-      // Update active button state
-      const buttons = document.querySelectorAll('.server-btn');
-      buttons.forEach(btn => btn.classList.remove('active'));
-      const activeButton = Array.from(buttons).find(btn => {
-        if (server === 'vidsrc.cc') return btn.textContent.trim() === 'Server 1';
-        if (server === 'vidsrc.me') return btn.textContent.trim() === 'Server 2';
-        if (server === 'player.videasy.net') return btn.textContent.trim() === 'Server 3';
-        return btn.textContent.trim() === `Server ${server.replace('server', '')}`;
-      });
-      if (activeButton) activeButton.classList.add('active');
-
-      const type = currentItem.media_type || (currentItem.first_air_date ? 'tv' : 'movie');
-      const embedURL = getServerUrl(server, type, currentItem.id);
-
-      if (!embedURL) {
-        console.error("Unsupported server:", server);
-        return;
-      }
-
-      try {
-        const videoFrame = document.getElementById('modal-video');
-        
-        // Clear current content first
-        videoFrame.src = '';
-        
-        // Short delay to ensure clearing happens
-        setTimeout(() => {
-          // Update iframe source
-          videoFrame.src = embedURL;
-          
-          // Add load event handler
-          videoFrame.onload = () => {
-            console.log(`Server ${server} loaded successfully`);
-          };
-          
-          // Add error handler
-          videoFrame.onerror = () => {
-            console.error(`Failed to load video from ${server}`);
-            videoFrame.src = ''; // Clear the failed source
-            
-            // Try next server automatically if this is a numbered server
-            if (server.startsWith('server')) {
-              const currentIndex = parseInt(server.replace('server', ''));
-              const nextServer = `server${currentIndex + 1}`;
-              const nextUrl = getServerUrl(nextServer, type, currentItem.id);
-              if (nextUrl) {
-                changeServer(nextServer);
-              }
-            }
-          };
-        }, 100);
-      } catch (error) {
-        console.error(`Error changing to server ${server}:`, error);
-      }
-    }
-
-    function getServerNumber(server) {
-      if (typeof server === 'string' && server.startsWith('server')) {
-        return parseInt(server.replace('server', ''));
-      }
-      return 1;
-    }    function closeModal() {
-  const modal = document.getElementById('modal');
-  if (modal) {
-    modal.classList.remove('show');
-    // delay hide to allow CSS fade-out
-    setTimeout(() => { modal.style.display = 'none'; }, 300);
-    const videoFrame = document.getElementById('modal-video');
-    if (videoFrame) {
-      videoFrame.src = '';
-    }
-  }
-}
-
-    function openSearchModal() {
-      document.getElementById('search-modal').style.display = 'flex';
-      document.getElementById('search-input').focus();
-    }
-
-    function closeSearchModal() {
-      document.getElementById('search-modal').style.display = 'none';
-      document.getElementById('search-results').innerHTML = '';
-    }
-
-    async function searchTMDB() {
-      const query = document.getElementById('navbar-search').value;
-      const resultsContainer = document.getElementById('navbar-search-results');
-      const searchResultsSection = document.getElementById('search-results');
-      const mainContent = document.getElementById('main-content');
-      const browseContent = document.getElementById('browse-content');
-      
-      if (!query.trim()) {
-        searchResultsSection.style.display = 'none';
-        if (browseContent.style.display === 'block') {
-          mainContent.style.display = 'none';
-        } else {
-          mainContent.style.display = 'block';
-        }
-        return;
-      }
-
-      // Show search results and hide other content
-      mainContent.style.display = 'none';
-      browseContent.style.display = 'none';
-      searchResultsSection.style.display = 'block';
-
-      // Show loading state
-      resultsContainer.innerHTML = '<div class="loading-spinner"><div class="spinner"></div><p>Searching...</p></div>';
-
-      try {
-        const res = await fetch(`${BASE_URL}/search/multi?api_key=${API_KEY}&query=${query}`);
-        const data = await res.json();
-        
-        resultsContainer.innerHTML = '';
-        if (data.results.length > 0) {
-          data.results.forEach(item => {
-            if (!item.poster_path) return;
-            const img = document.createElement('img');
-            img.src = `${IMG_URL}${item.poster_path}`;
-            img.alt = item.title || item.name;
-            img.onclick = () => {
-              showDetails(item);
-              document.getElementById('navbar-search').value = '';
-              searchResultsSection.style.display = 'none';
-              mainContent.style.display = 'block';
-            };
-            resultsContainer.appendChild(img);
-          });
-        } else {
-          resultsContainer.innerHTML = '<div class="no-results">No results found</div>';
-        }
-      } catch (error) {
-        console.error('Search error:', error);
-        resultsContainer.innerHTML = '<div class="no-results">Error searching. Please try again.</div>';
-      }
-    }
-
-    // Close search results when clicking outside search container
-    document.addEventListener('click', (e) => {
-      const searchBar = document.getElementById('navbar-search');
-      const searchResultsSection = document.getElementById('search-results');
-      const mainContent = document.getElementById('main-content');
-      const browseContent = document.getElementById('browse-content');
-      
-      if (e.target !== searchBar && !searchResultsSection.contains(e.target)) {
-        searchResultsSection.style.display = 'none';
-        if (browseContent.style.display !== 'block') {
-          mainContent.style.display = 'block';
-        }
-        searchBar.value = '';
-      }
-    });
-
-    async function checkVideoAvailability(item) {
-      const type = item.media_type || (item.first_air_date ? 'tv' : 'movie');
-      const endpoints = type === 'movie' ? MOVIE_ENDPOINTS : TV_ENDPOINTS;
-      
-      // Create an array of promises for parallel checking
-      const checks = endpoints.map(endpoint => {
-        return new Promise(async (resolve) => {
-          try {
-            let url;
-            if (endpoint.includes('gdriveplayer')) {
-              url = endpoint + item.id + (type === 'tv' ? '&s=1&e=1' : '');
-            } else if (endpoint.includes('playtaku')) {
-              url = endpoint + item.id + (type === 'tv' ? '&s=1&ep=1' : '');
-            } else {
-              url = endpoint + item.id;
-            }
-
-            const response = await fetch(url, { 
-              method: 'HEAD',
-              mode: 'no-cors',
-              timeout: 5000 // 5 second timeout
-            });
-            
-            // Consider opaque responses as successful in no-cors mode
-            resolve(response.type === 'opaque' || response.ok);
-          } catch (error) {
-            resolve(false);
-          }
-        });
-      });
-
-      // Check all endpoints in parallel with Promise.race
-      try {
-        // Wait for the first successful response or all failures
-        const results = await Promise.race([
-          Promise.any(checks), // First success
-          new Promise(resolve => setTimeout(() => resolve(false), 10000)) // 10s timeout
-        ]);
-        
-        return results !== false;
-      } catch (error) {
-        console.warn(`No available servers found for ${type} ID: ${item.id}`);
+        // If any URL is available, return true
+        const results = await Promise.any(checks);
+        return results === true;
+    } catch (error) {
+        console.warn(`No video available for ${type} ID: ${item.id}`);
         return false;
-      }
     }
+}
 
-    async function displayBrowseResults(items) {
-      const container = document.getElementById('browse-results');
-      container.innerHTML = '';
-      
-      if (!items.length) {
-        container.innerHTML = '<div class="no-results">No results found. Try different filters.</div>';
+// Display lists
+async function displayList(items, containerId) {
+    const container = document.getElementById(containerId);
+    if (!container || !Array.isArray(items)) {
+        console.warn(`Invalid container or items for ${containerId}`);
         return;
-      }
-
-      const grid = document.createElement('div');
-      grid.className = 'browse-grid';
-
-      // Use Promise.all to handle all async operations properly
-      const cardPromises = items
-        .filter(item => item.poster_path)
-        .map(async item => {
-          try {
-            const isAvailable = await checkVideoAvailability(item);
-            if (!isAvailable) return null;
-            
-            const card = document.createElement('div');
-            card.className = 'browse-card';
+    }
+    
+    console.log(`Displaying ${items.length} items in ${containerId}`);
+    
+    // Clone the old container and replace it with a new one to remove old event listeners
+    const oldContainer = container;
+    const newContainer = oldContainer.cloneNode(false);
+    newContainer.innerHTML = '';
+    newContainer.classList.add('list'); // Add the list class while preserving others
+    oldContainer.parentNode.replaceChild(newContainer, oldContainer);
+    
+    const itemsWithPosters = items.filter(item => item.poster_path);
+    console.log(`Found ${itemsWithPosters.length} items with posters`);
+    
+    for (const item of itemsWithPosters) {
+        try {
+            const posterContainer = document.createElement('div');
+            posterContainer.className = 'poster-container';
+            posterContainer.dataset.itemId = item.id;
             
             const img = document.createElement('img');
-            img.src = `${IMG_URL}${item.poster_path}`;
-            img.alt = item.title || item.name;
-            img.onclick = () => showDetails(item);
+            img.loading = 'lazy';
             
-            const title = document.createElement('div');
-            title.className = 'browse-title';
+            // Add loading animation class and handlers
+            posterContainer.classList.add('loading');
+            
+            img.onload = () => {
+                console.log(`Image loaded for ${item.title || item.name}`);
+                posterContainer.classList.remove('loading');
+                posterContainer.classList.add('loaded');
+            };
+            
+            img.onerror = () => {
+                console.warn(`Image failed to load for ${item.title || item.name}`);
+                posterContainer.classList.remove('loading');
+                img.src = 'placeholder.jpg';
+            };
+            
+            // Set up image loading
+            const imageUrl = item.poster_path ? 
+                `${IMG_URL}${item.poster_path}` : 
+                'placeholder.jpg';
+            
+            console.log(`Loading image from ${imageUrl} for ${item.title || item.name}`);
+            
+            img.src = imageUrl;
+            img.alt = item.title || item.name;
+            
+            const overlay = document.createElement('div');
+            overlay.className = 'poster-overlay';
+            
+            const title = document.createElement('h3');
+            title.className = 'poster-title';
             title.textContent = item.title || item.name;
             
-            card.appendChild(img);
-            card.appendChild(title);
-            return card;
-          } catch (error) {
-            console.error('Error creating browse card:', error);
-            return null;
-          }
-        });
+            const starRating = createStarRating(item.vote_average * 10);
+            
+            const releaseYear = document.createElement('div');
+            releaseYear.className = 'poster-year';
+            releaseYear.textContent = new Date(item.release_date || item.first_air_date).getFullYear();
+            
+            const description = document.createElement('div');
+            description.className = 'poster-description';
+            description.textContent = item.overview;
+            
+            overlay.appendChild(title);
+            overlay.appendChild(starRating);
+            overlay.appendChild(releaseYear);
+            overlay.appendChild(description);
+            posterContainer.appendChild(img);
+            posterContainer.appendChild(overlay);
+            
+            posterContainer.onclick = (e) => {
+                e.preventDefault();
+                showDetails(item);
+            };
+            
+            newContainer.appendChild(posterContainer);
+        } catch (error) {
+            console.error(`Error creating poster: ${error.message}`);
+        }
+    }
+    
+    // Update loading state of container
+    container.querySelectorAll('.loading-spinner').forEach(spinner => spinner.remove());
+    console.log(`Finished loading posters for ${containerId}`);
+}
 
-      // Wait for all cards to be processed
-      const cards = await Promise.all(cardPromises);
-      
-      // Filter out null results and append valid cards
-      cards
-        .filter(card => card !== null)
-        .forEach(card => grid.appendChild(card));
+// Search functions
+function openSearchModal() {
+    document.getElementById('search-modal').style.display = 'flex';
+    document.getElementById('search-input').focus();
+}
 
-      container.appendChild(grid);
+function closeSearchModal() {
+    document.getElementById('search-modal').style.display = 'none';
+    document.getElementById('search-results').innerHTML = '';
+}
+
+async function searchTMDB() {
+    const query = document.getElementById('navbar-search').value;
+    const resultsContainer = document.getElementById('navbar-search-results');
+    const searchResultsSection = document.getElementById('search-results');
+    const mainContent = document.getElementById('main-content');
+    const browseContent = document.getElementById('browse-content');
+  
+    if (!query.trim()) {
+        searchResultsSection.style.display = 'none';
+        if (browseContent.style.display === 'block') {
+            mainContent.style.display = 'none';
+        } else {
+            mainContent.style.display = 'block';
+        }
+        return;
     }
 
-    // Add drag scrolling functionality
-    function initDragScroll() {
-      const sliders = document.querySelectorAll('.list');
-      const LONG_PRESS_THRESHOLD = 200; // milliseconds for long press
-      
-      sliders.forEach(slider => {
+    // Show search results and hide other content
+    mainContent.style.display = 'none';
+    browseContent.style.display = 'none';
+    searchResultsSection.style.display = 'block';
+
+    // Show loading state
+    resultsContainer.innerHTML = '<div class="loading-spinner"><div class="spinner"></div><p>Searching...</p></div>';
+
+    try {
+        const res = await fetch(`${BASE_URL}/search/multi?api_key=${API_KEY}&query=${query}`);
+        const data = await res.json();
+    
+        resultsContainer.innerHTML = '';
+        if (data.results.length > 0) {
+            data.results.forEach(item => {
+                if (!item.poster_path) return;
+                const img = document.createElement('img');
+                img.src = `${IMG_URL}${item.poster_path}`;
+                img.alt = item.title || item.name;
+                img.onclick = () => {
+                    showDetails(item);
+                    document.getElementById('navbar-search').value = '';
+                    searchResultsSection.style.display = 'none';
+                    mainContent.style.display = 'block';
+                };
+                resultsContainer.appendChild(img);
+            });
+        } else {
+            resultsContainer.innerHTML = '<div class="no-results">No results found</div>';
+        }
+    } catch (error) {
+        console.error('Search error:', error);
+        resultsContainer.innerHTML = '<div class="no-results">Error searching. Please try again.</div>';
+    }
+}
+
+// Close search results when clicking outside search container
+document.addEventListener('click', (e) => {
+    const searchBar = document.getElementById('navbar-search');
+    const searchResultsSection = document.getElementById('search-results');
+    const mainContent = document.getElementById('main-content');
+    const browseContent = document.getElementById('browse-content');
+  
+    if (e.target !== searchBar && !searchResultsSection.contains(e.target)) {
+        searchResultsSection.style.display = 'none';
+        if (browseContent.style.display !== 'block') {
+            mainContent.style.display = 'block';
+        }
+        searchBar.value = '';
+    }
+});
+
+// Drag scrolling functionality
+function initDragScroll() {
+    const sliders = document.querySelectorAll('.list');
+    const LONG_PRESS_THRESHOLD = 200;
+  
+    sliders.forEach(slider => {
         let isDown = false;
         let startX;
         let scrollLeft;
@@ -523,181 +352,255 @@ const API_KEY = 'f7969edc09425407417da271f5077c89';
         let isDraggable = false;
 
         slider.addEventListener('mousedown', (e) => {
-          startX = e.pageX - slider.offsetLeft;
-          scrollLeft = slider.scrollLeft;
-          
-          // Start long press timer
-          longPressTimer = setTimeout(() => {
-            isDown = true;
-            isDraggable = true;
-            slider.classList.add('dragging');
-          }, LONG_PRESS_THRESHOLD);
+            startX = e.pageX - slider.offsetLeft;
+            scrollLeft = slider.scrollLeft;
+        
+            longPressTimer = setTimeout(() => {
+                isDown = true;
+                isDraggable = true;
+                slider.classList.add('dragging');
+            }, LONG_PRESS_THRESHOLD);
         });
 
         slider.addEventListener('mouseleave', () => {
-          isDown = false;
-          isDraggable = false;
-          clearTimeout(longPressTimer);
-          slider.classList.remove('dragging');
+            isDown = false;
+            isDraggable = false;
+            clearTimeout(longPressTimer);
+            slider.classList.remove('dragging');
         });
 
         slider.addEventListener('mouseup', () => {
-          isDown = false;
-          isDraggable = false;
-          clearTimeout(longPressTimer);
-          slider.classList.remove('dragging');
+            isDown = false;
+            isDraggable = false;
+            clearTimeout(longPressTimer);
+            slider.classList.remove('dragging');
         });
 
         slider.addEventListener('mousemove', (e) => {
-          if (!isDown || !isDraggable) return;
-          e.preventDefault();
-          const x = e.pageX - slider.offsetLeft;
-          const walk = (x - startX) * 2; // Scroll speed multiplier
-          slider.scrollLeft = scrollLeft - walk;
+            if (!isDown || !isDraggable) return;
+            e.preventDefault();
+            const x = e.pageX - slider.offsetLeft;
+            const walk = (x - startX) * 2;
+            slider.scrollLeft = scrollLeft - walk;
         });
 
-        // Prevent click events when dragging
         slider.addEventListener('click', (e) => {
-          if (isDraggable) {
-            e.preventDefault();
-            e.stopPropagation();
-          }
+            if (isDraggable) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
         }, true);
-      });
-    }
+    });
+}
 
-    // Theme handling
+// Theme handling
 function setTheme(theme) {
-  document.documentElement.setAttribute('data-theme', theme);
-  localStorage.setItem('theme', theme);
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
 }
 
 function toggleTheme() {
-  const currentTheme = localStorage.getItem('theme') || 'dark';
-  const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-  
-  // Add transition class to body
-  document.body.classList.add('theme-transitioning');
-  
-  // Set new theme
-  setTheme(newTheme);
-  
-  // Remove transition class after transition completes
-  setTimeout(() => {
-    document.body.classList.remove('theme-transitioning');
-  }, 300); // Match this with the CSS transition duration
+    const currentTheme = localStorage.getItem('theme') || 'dark';
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    setTheme(newTheme);
 }
 
-// Initialize theme
 function initTheme() {
-  const savedTheme = localStorage.getItem('theme') || 'dark';
-  setTheme(savedTheme);
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    setTheme(savedTheme);
 }
 
-    async function init() {
-      initTheme();
-      const movies = await fetchTrending('movie');
-      const tvShows = await fetchTrending('tv');
-      const anime = await fetchTrendingAnime();
-      const kdramas = await fetchTrendingKDramas();
+// Export for global use
+window.searchTMDB = searchTMDB;
+window.toggleTheme = toggleTheme;
+window.setTheme = setTheme;
+window.initTheme = initTheme;
 
-      // Get 4 random movies for the banner
-      bannerItems = movies
-        .sort(() => Math.random() - 0.5)
-        .slice(0, 4)
-        .filter(movie => movie.backdrop_path);
+// Initialize theme on page load
+document.addEventListener('DOMContentLoaded', () => {
+    initTheme();
+});
 
-      displayBanner(bannerItems[0]);
-      startBannerSlideshow();
-        displayList(movies, 'movies-list');
-      displayList(tvShows, 'tvshows-list');
-      displayList(anime, 'anime-list');
-      displayList(kdramas, 'kdrama-list');
-      displayList(kdramas, 'kdramas-list');
-      
-      // Initialize drag scrolling
-      initDragScroll();
+// Star rating functionality is now imported from videoModal.js
+
+// Initialize event listeners for modal and banner
+function initModalEvents() {
+    // Modal close button
+    const closeButton = document.getElementById('modal-close-button');
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
     }
 
-    init();
+    // Banner buttons
+    const playButton = document.getElementById('banner-play-button');
+    const infoButton = document.getElementById('banner-info-button');
+    
+    if (playButton) {
+        playButton.addEventListener('click', () => {
+            if (currentBannerItem) showDetails(currentBannerItem);
+        });
+    }
+    
+    if (infoButton) {
+        infoButton.addEventListener('click', () => {
+            if (currentBannerItem) showDetails(currentBannerItem);
+        });
+    }
+}
 
-    function getServerUrl(server, type, id) {
-      if (!id) return null;
+// Initialize event listeners
+function initializeEventListeners() {
+    // Logo click
+    document.getElementById('logo').addEventListener('click', () => {
+        window.location.href = 'index.html';
+    });
 
-      switch(server) {
-        case 'vidsrc.cc':
-          return `https://vidsrc.cc/v2/embed/${type}/${id}`;
-        case 'vidsrc.me':
-          return `https://vidsrc.me/embed/${type}/${id}`;
-        case 'player.videasy.net':
-          return `https://player.videasy.net/${type}/${id}`;
-        default:
-          // Handle numbered servers
-          const serverNum = parseInt(server.replace('server', ''));
-          if (!isNaN(serverNum) && serverNum > 0) {
-            const endpoints = type === 'movie' ? MOVIE_ENDPOINTS : TV_ENDPOINTS;
-            const index = serverNum - 4;
-            if (index >= 0 && index < endpoints.length) {
-              if (endpoints[index].includes('gdriveplayer')) {
-                return endpoints[index] + id + (type === 'tv' ? '&s=1&e=1' : '');
-              } else if (endpoints[index].includes('playtaku')) {
-                return endpoints[index] + id + (type === 'tv' ? '&s=1&ep=1' : '');
-              }
-              return endpoints[index] + id;
+    // Browse button
+    document.getElementById('browse-btn').addEventListener('click', () => {
+        toggleBrowseView();
+    });
+
+    // Search input
+    document.getElementById('navbar-search').addEventListener('input', () => {
+        searchTMDB();
+    });
+
+    // Theme toggle
+    document.getElementById('theme-toggle').addEventListener('click', () => {
+        toggleTheme();
+    });
+}
+
+// List initialization
+function initListNavigation() {
+    const lists = document.querySelectorAll('.list');
+    lists.forEach(list => {
+        let startX;
+        let scrollLeft;
+        let isScrolling = false;
+        
+        // Add touch scrolling support with improved handling
+        list.addEventListener('touchstart', (e) => {
+            isScrolling = true;
+            startX = e.touches[0].pageX - list.offsetLeft;
+            scrollLeft = list.scrollLeft;
+            list.classList.add('dragging');
+        }, { passive: true });
+
+        list.addEventListener('touchmove', (e) => {
+            if (!isScrolling) return;
+            e.preventDefault();
+            const x = e.touches[0].pageX - list.offsetLeft;
+            const walk = (x - startX) * 2; // Multiply by 2 for faster scrolling
+            list.scrollLeft = scrollLeft - walk;
+        }, { passive: false });
+
+        list.addEventListener('touchend', () => {
+            isScrolling = false;
+            list.classList.remove('dragging');
+        }, { passive: true });
+
+        // Add improved mouse drag scrolling
+        let isDragging = false;
+        let startPageX;
+
+        list.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            lastPageX = e.pageX;
+            e.preventDefault();
+        });        list.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            startPageX = e.pageX;
+            scrollLeft = list.scrollLeft;
+            list.style.cursor = 'grabbing';
+            list.classList.add('dragging');
+            e.preventDefault();
+        });
+
+        list.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            const x = e.pageX;
+            const walk = (x - startPageX) * 2; // Multiply by 2 for faster scrolling
+            list.scrollLeft = scrollLeft - walk;
+        });
+
+        const stopDragging = () => {
+            isDragging = false;
+            list.style.cursor = 'grab';
+            list.classList.remove('dragging');
+        };
+
+        list.addEventListener('mouseup', stopDragging);
+        list.addEventListener('mouseleave', stopDragging);
+    });
+}
+
+// Initialization
+async function init() {
+    try {
+        initTheme();
+        initModalEvents();
+        initDragScroll(); // Initialize drag scrolling
+        
+        const movies = await fetchTrending('movie');
+        const tvShows = await fetchTrending('tv');
+        const anime = await fetchTrendingAnime();
+        const kdramas = await fetchTrendingKDramas();
+
+        // Setup random banner items
+        bannerItems = movies
+            .sort(() => Math.random() - 0.5)
+            .slice(0, 4)
+            .filter(movie => movie.backdrop_path);
+
+        if (bannerItems.length > 0) {
+            displayBanner(bannerItems[0]);
+            startBannerSlideshow();
+        }
+        
+        // Add loading indicators
+        ['movies-list', 'tvshows-list', 'anime-list', 'kdramas-list'].forEach(id => {
+            const container = document.getElementById(id);
+            if (container) {
+                container.innerHTML = '<div class="loading-spinner"><div class="spinner"></div><p>Loading content...</p></div>';
             }
-          }
-          return null;
-      }
+        });
+
+        // Load and display content
+        await Promise.all([
+            displayList(movies, 'movies-list'),
+            displayList(tvShows, 'tvshows-list'),
+            displayList(anime, 'anime-list'),
+            displayList(kdramas, 'kdramas-list')
+        ]);
+        
+        // Initialize list navigation after content is loaded
+        initListNavigation();
+    } catch (error) {
+        console.error('Initialization error:', error);
     }
-
-    // Function to dynamically populate poster content
-function populatePosters(movies) {
-  const posterContainer = document.querySelector('.poster-container');
-
-  movies.forEach(movie => {
-    const poster = document.createElement('div');
-    poster.className = 'poster';
-    poster.style.backgroundImage = `url(${movie.posterUrl})`;
-
-    const ratingRing = document.createElement('div');
-    ratingRing.className = 'rating-ring';
-    ratingRing.style.setProperty('--percent', `${movie.rating}%`);
-    ratingRing.style.setProperty('--rating-color', movie.rating > 75 ? 'green' : movie.rating > 50 ? 'orange' : 'red');
-
-    const ratingPercentage = document.createElement('span');
-    ratingPercentage.className = 'rating-percentage';
-    ratingPercentage.textContent = `${movie.rating}%`;
-    ratingRing.appendChild(ratingPercentage);
-
-    const overlay = document.createElement('div');
-    overlay.className = 'poster-overlay';
-
-    const title = document.createElement('h3');
-    title.className = 'poster-title';
-    title.textContent = movie.title;
-
-    const year = document.createElement('p');
-    year.className = 'poster-year';
-    year.textContent = movie.year;
-
-    const genre = document.createElement('span');
-    genre.className = 'poster-genre';
-    genre.textContent = movie.genre;
-
-    overlay.appendChild(title);
-    overlay.appendChild(year);
-    overlay.appendChild(genre);
-
-    poster.appendChild(ratingRing);
-    poster.appendChild(overlay);
-    posterContainer.appendChild(poster);
-  });
 }
 
-// Example usage
-const movies = [
-  { title: 'A Minecraft Movie', year: '2025', genre: 'Movie', rating: 65, posterUrl: 'path-to-movie-poster.jpg' },
-  // Add more movie objects here
-];
-
-populatePosters(movies);
+// Initialize event listeners
+document.addEventListener('DOMContentLoaded', () => {
+    withRetry(() => {
+        // Initialize video modal events
+        initVideoModalEvents();
+        // Initialize event listeners
+        initializeEventListeners();
+        // Initialize the application
+        return init();
+    }, 'initialization').catch(error => {
+        console.error('Critical initialization error:', error);
+        // Show user-friendly error message
+        const mainContent = document.getElementById('main-content');
+        if (mainContent) {
+            mainContent.innerHTML = `
+                <div class="error-message" style="text-align: center; padding: 2rem;">
+                    <h2>Oops! Something went wrong</h2>
+                    <p>Please refresh the page to try again.</p>
+                </div>
+            `;
+        }
+    });
+});
