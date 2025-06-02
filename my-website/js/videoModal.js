@@ -100,6 +100,43 @@ async function showDetails(item) {
     const newUrl = `${window.location.pathname}?type=${mediaType}&id=${item.id}`;
     window.history.pushState({ type: mediaType, id: item.id }, '', newUrl);
     
+    // Update page meta tags for SEO
+    document.title = `${item.title || item.name} - JustFlixMovies`;
+    document.querySelector('meta[name="description"]').setAttribute('content', item.overview);
+    document.querySelector('meta[property="og:title"]').setAttribute('content', `${item.title || item.name} - JustFlixMovies`);
+    document.querySelector('meta[property="og:description"]').setAttribute('content', item.overview);
+    document.querySelector('meta[property="og:url"]').setAttribute('content', window.location.href);
+    if (item.poster_path) {
+      document.querySelector('meta[property="og:image"]').setAttribute('content', `${IMG_URL}${item.poster_path}`);
+    }
+
+    // Add structured data
+    const structuredData = {
+      '@context': 'https://schema.org',
+      '@type': mediaType === 'movie' ? 'Movie' : 'TVSeries',
+      'name': item.title || item.name,
+      'description': item.overview,
+      'image': item.poster_path ? `${IMG_URL}${item.poster_path}` : undefined,
+      'datePublished': item.release_date || item.first_air_date,
+      'aggregateRating': {
+        '@type': 'AggregateRating',
+        'ratingValue': item.vote_average,
+        'ratingCount': item.vote_count,
+        'bestRating': 10,
+        'worstRating': 0
+      }
+    };
+
+    // Update or create structured data script tag
+    let scriptTag = document.querySelector('#structured-data');
+    if (!scriptTag) {
+      scriptTag = document.createElement('script');
+      scriptTag.id = 'structured-data';
+      scriptTag.type = 'application/ld+json';
+      document.head.appendChild(scriptTag);
+    }
+    scriptTag.textContent = JSON.stringify(structuredData);
+    
     const modal = document.getElementById('modal');
     if (!modal) {
       logDebug('Error: Modal container not found');
