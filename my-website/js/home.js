@@ -46,6 +46,24 @@ window.closeModal = (...args) => withRetry(() => closeModal(...args), 'closeModa
 // Initialize with retry mechanism
 document.addEventListener('DOMContentLoaded', () => {
     withRetry(() => {
+        // Handle URL parameters if present
+        const urlParams = new URLSearchParams(window.location.search);
+        const itemId = urlParams.get('id');
+        const itemType = urlParams.get('type');
+        
+        if (itemId && itemType) {
+            // Fetch and show details for the item from URL
+            fetch(`${BASE_URL}/${itemType}/${itemId}?api_key=${API_KEY}`)
+                .then(response => response.json())
+                .then(data => {
+                    data.media_type = itemType;
+                    showDetails(data);
+                })
+                .catch(error => {
+                    console.error('Error fetching item details:', error);
+                });
+        }
+
         // Initialize video modal events
         initVideoModalEvents();
         // Initialize the application
