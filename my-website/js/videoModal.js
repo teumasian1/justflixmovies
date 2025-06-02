@@ -70,18 +70,43 @@ const TV_ENDPOINTS = [
 
 let currentItem;
 
+// Event listener for browser back/forward buttons
+window.addEventListener('popstate', (event) => {
+    if (event.state && event.state.id) {
+        // Re-fetch and show the item when navigating through history
+        fetch(`${BASE_URL}/${event.state.type}/${event.state.id}?api_key=${API_KEY}`)
+            .then(response => response.json())
+            .then(data => {
+                data.media_type = event.state.type;
+                showDetails(data);
+            })
+            .catch(error => {
+                logDebug(`Error fetching item details: ${error}`);
+            });
+    } else {
+        // Close modal if navigating back to base URL
+        closeModal();
+    }
+});
+
 // Main function to show video modal
 async function showDetails(item) {
   try {
     currentItem = item;
     logDebug(`Showing details for: ${item.title || item.name}`);
     
+    // Update URL with movie/show information
+    const mediaType = item.media_type || (item.first_air_date ? 'tv' : 'movie');
+    const newUrl = `${window.location.pathname}?type=${mediaType}&id=${item.id}`;
+    window.history.pushState({ type: mediaType, id: item.id }, '', newUrl);
+    
     const modal = document.getElementById('modal');
     if (!modal) {
       logDebug('Error: Modal container not found');
       return;
     }
-      // Hide main content and show modal
+
+    // Hide main content and show modal
     document.getElementById('main-content').style.display = 'none';
     document.getElementById('search-results').style.display = 'none';
     document.getElementById('browse-content').style.display = 'none';
@@ -580,6 +605,10 @@ function closeModal() {
     const modal = document.getElementById('modal');
     if (modal) {
         modal.classList.remove('show');
+        
+        // Remove URL parameters when closing modal
+        window.history.pushState({}, '', window.location.pathname);
+        
         setTimeout(() => { 
             modal.style.display = 'none';
             
