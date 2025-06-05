@@ -4,4 +4,4 @@ Allow: /browse
 Disallow: /js/
 Disallow: /css/
 
-Sitemap: https://justflixmovies.com/sitemap.xml
+Sitemap: https://justflixmovies.pages.dev/sitemap.xml
