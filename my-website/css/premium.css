@@ -294,6 +294,7 @@ body {
 }
 
 .modal-content {
+  --episodes-panel-width: 400px;
   background: var(--bg-secondary) !important;
   border: 1px solid var(--glass-border) !important;
   border-radius: 20px !important;
@@ -316,48 +317,65 @@ body {
   margin-right: 0 !important;
 }
 
-@media (max-width: 1200px) {
+.modal-content.is-movie-modal .season-picker,
+.modal-content.is-movie-modal .episode-nav {
+  display: none !important;
+}
+
+@media (min-width: 1201px) and (max-width: 1440px) {
   .modal-content {
-    display: flex !important;
-    flex-direction: column !important;
+    --episodes-panel-width: 340px;
   }
-  .modal-main {
-    margin-right: 0 !important;
+
+  .episodes-list {
+    padding: 18px !important;
   }
-  .episodes-section {
-    position: static !important;
-    width: 100% !important;
-    height: auto !important;
+
+  .seasons-bar {
+    padding: 18px 18px 10px 18px !important;
+  }
+
+  .episode-item {
+    gap: 14px !important;
+    padding: 12px !important;
+  }
+
+  .episode-thumbnail {
+    width: 120px !important;
+    height: 68px !important;
   }
 }
+
 
 .modal-main {
   background: var(--bg-secondary) !important;
   display: flex !important;
   flex-direction: column !important;
-  margin-right: 400px !important;
+  margin-right: var(--episodes-panel-width) !important;
 }
 
 .video-section {
   width: 100% !important;
   height: auto !important;
-  aspect-ratio: 16 / 9 !important;
   display: flex !important;
   flex-direction: column !important;
-  background: #000 !important;
+  background: var(--bg-secondary) !important;
 }
 
 .server-selector {
   position: relative !important;
   height: auto !important;
-  background: transparent !important;
-  padding: 20px 30px !important;
+  background: var(--bg-secondary) !important;
+  padding: 15px 30px !important;
   border-bottom: none !important;
+  border-top: 1px solid var(--glass-border) !important;
   z-index: 10 !important;
   display: flex !important;
   flex-direction: row !important;
+  flex-wrap: wrap !important;
   align-items: center !important;
   gap: 15px !important;
+  order: 2 !important;
 }
 
 .server-selector h3 {
@@ -369,7 +387,13 @@ body {
   letter-spacing: 1px;
 }
 
-.server-dropdown {
+.season-picker {
+  display: flex;
+  align-items: center;
+}
+
+.server-dropdown,
+.season-dropdown {
   background: rgba(255, 255, 255, 0.05) !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
   color: #fff !important;
@@ -386,23 +410,74 @@ body {
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
 }
 
-.server-dropdown:hover, .server-dropdown:focus {
+.season-dropdown {
+  min-width: 170px !important;
+}
+
+.server-dropdown:hover, .server-dropdown:focus,
+.season-dropdown:hover, .season-dropdown:focus {
   background: rgba(255, 42, 95, 0.1) !important;
   border-color: var(--accent-color) !important;
   box-shadow: 0 0 15px rgba(255, 42, 95, 0.3) !important;
 }
 
-.server-dropdown option {
+.server-dropdown option,
+.season-dropdown option {
   background: var(--bg-primary) !important;
   color: #fff !important;
   font-weight: 600 !important;
   padding: 12px !important;
 }
 
+.episode-nav {
+  display: flex !important;
+  align-items: center !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 12px !important;
+  padding: 5px !important;
+  gap: 5px !important;
+  margin-left: auto !important;
+}
+
+.ep-nav-btn {
+  background: transparent !important;
+  border: none !important;
+  color: #fff !important;
+  font-size: 1.1rem !important;
+  cursor: pointer !important;
+  padding: 8px 15px !important;
+  border-radius: 8px !important;
+  transition: all 0.3s ease !important;
+}
+
+.ep-nav-btn:hover:not(:disabled) {
+  background: rgba(255, 42, 95, 0.2) !important;
+  color: var(--accent-color) !important;
+}
+
+.ep-nav-btn:disabled {
+  opacity: 0.3 !important;
+  cursor: not-allowed !important;
+}
+
+.ep-nav-text {
+  font-weight: 700 !important;
+  font-size: 1.1rem !important;
+  color: var(--accent-color) !important;
+  min-width: 60px !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+}
+
 .video-wrapper {
   margin: 0 !important;
-  height: 100% !important;
-  flex: 1 !important;
+  width: 100% !important;
+  height: auto !important;
+  aspect-ratio: 16 / 9 !important;
+  flex: none !important;
+  order: 1 !important;
+  background: #000 !important;
 }
 
 .modal-body {
@@ -456,10 +531,10 @@ body {
 .episodes-section {
   position: absolute !important;
   top: 0; right: 0; bottom: 0;
-  width: 400px !important;
+  width: var(--episodes-panel-width) !important;
   background: var(--bg-primary) !important;
   border-left: 1px solid var(--glass-border) !important;
-  display: flex;
+  display: flex !important;
   flex-direction: column !important;
   max-height: none !important;
 }
@@ -604,10 +679,38 @@ body {
     gap: 10px !important;
   }
   
-  .server-dropdown {
+  .server-dropdown,
+  .season-dropdown {
     width: 100% !important;
     font-size: 1.1rem !important;
     padding: 12px 20px !important;
+  }
+
+  .modal-content.is-tv-modal .server-selector {
+    height: auto !important;
+    min-height: 0 !important;
+    align-items: stretch !important;
+  }
+
+  .modal-content.is-tv-modal .server-buttons,
+  .modal-content.is-tv-modal .season-picker,
+  .modal-content.is-tv-modal .episode-nav {
+    width: 100% !important;
+  }
+
+  .modal-content.is-tv-modal .season-picker {
+    display: flex !important;
+  }
+
+  .modal-content.is-tv-modal .episode-nav {
+    display: flex !important;
+    margin-left: 0 !important;
+    justify-content: space-between !important;
+  }
+
+  .modal-content.is-tv-modal .server-dropdown,
+  .modal-content.is-tv-modal .season-dropdown {
+    display: block !important;
   }
   
   /* Reduce excessive paddings */
@@ -674,6 +777,233 @@ body {
 .close-button:hover {
   background: var(--accent-color) !important;
   transform: rotate(90deg) scale(1.1) !important;
+}
+
+@media (max-width: 1200px) {
+  .modal {
+    padding: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .modal-content,
+  .modal-content.is-tv-modal {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100dvh !important;
+    min-height: 100vh !important;
+    max-height: 100dvh !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-y !important;
+  }
+
+  .video-section,
+  .modal-content.is-tv-modal .video-section {
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-areas:
+      "video"
+      "controls" !important;
+    align-content: start !important;
+  }
+
+  .video-wrapper,
+  .modal-content.is-tv-modal .video-wrapper {
+    grid-area: video !important;
+    height: auto !important;
+    margin-top: 0 !important;
+    aspect-ratio: 16 / 9 !important;
+    order: initial !important;
+  }
+
+  .server-selector,
+  .modal-content.is-tv-modal .server-selector {
+    grid-area: controls !important;
+    position: relative !important;
+    height: auto !important;
+    min-height: 0 !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    align-items: stretch !important;
+    padding: 12px !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    border-bottom: 1px solid var(--glass-border) !important;
+    order: initial !important;
+  }
+
+  .server-buttons,
+  .season-picker {
+    width: 100% !important;
+    min-width: 0 !important;
+    margin-top: 0 !important;
+  }
+
+  .server-buttons {
+    display: block !important;
+    position: static !important;
+    z-index: auto !important;
+  }
+
+  .season-picker {
+    display: flex !important;
+  }
+
+  .server-dropdown,
+  .season-dropdown {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 48px !important;
+    font-size: 0.95rem !important;
+    padding: 9px 12px !important;
+  }
+
+  .episode-nav {
+    grid-column: 1 / -1 !important;
+    margin-left: 0 !important;
+    width: 100% !important;
+    justify-content: space-between !important;
+    padding: 4px !important;
+    gap: 4px !important;
+    position: relative !important;
+    z-index: 2 !important;
+    background: rgba(18, 20, 30, 0.98) !important;
+  }
+
+  .ep-nav-btn {
+    padding: 8px 12px !important;
+    font-size: 1rem !important;
+  }
+
+  .ep-nav-text {
+    min-width: 48px !important;
+    font-size: 1rem !important;
+  }
+  .modal-main,
+  .modal-content.is-tv-modal .modal-main {
+    margin-right: 0 !important;
+    order: 1 !important;
+    overflow: visible !important;
+    gap: 18px !important;
+  }
+
+  .modal-content.is-tv-modal .modal-body {
+    order: 2 !important;
+    overflow: visible !important;
+  }
+
+  .modal-body,
+  .modal-content.is-tv-modal .modal-body {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+    position: relative !important;
+    z-index: 0 !important;
+    margin: 24px 0 0 !important;
+    padding: 8px 16px 18px !important;
+    gap: 16px !important;
+  }
+
+  .modal-image,
+  .modal-content.is-tv-modal .modal-image {
+    width: min(36vw, 150px) !important;
+    max-width: 150px !important;
+    height: auto !important;
+    flex: 0 0 auto !important;
+    position: static !important;
+    top: auto !important;
+    transform: none !important;
+    z-index: 0 !important;
+    margin: 28px auto 0 !important;
+  }
+
+  .modal-image img,
+  .modal-content.is-tv-modal .modal-image img {
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+  }
+
+  .modal-text,
+  .modal-content.is-tv-modal .modal-text {
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 10px !important;
+  }
+
+  .modal-text h2,
+  .modal-content.is-tv-modal .modal-text h2 {
+    font-size: clamp(1.9rem, 8vw, 2.6rem) !important;
+    line-height: 1.05 !important;
+    margin: 0 !important;
+  }
+
+  .modal-meta,
+  .modal-content.is-tv-modal .modal-meta {
+    justify-content: center !important;
+    gap: 8px !important;
+    flex-wrap: wrap !important;
+  }
+
+  #modal-description {
+    display: block !important;
+    text-align: center !important;
+    overflow: visible !important;
+    -webkit-line-clamp: unset !important;
+    line-clamp: unset !important;
+  }
+
+  .episodes-section,
+  .modal-content.is-tv-modal .episodes-section {
+    position: static !important;
+    width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    border-left: none !important;
+    border-top: 1px solid var(--glass-border) !important;
+    order: 2 !important;
+  }
+
+  .seasons-bar {
+    position: static !important;
+  }
+
+  .episodes-list {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)) !important;
+    gap: 12px !important;
+    align-content: start !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    flex: none !important;
+    margin-bottom: 0 !important;
+  }
+
+  .episode-item {
+    margin-bottom: 0 !important;
+  }
+}
+
+@media (min-width: 1201px) and (max-width: 1500px) {
+  .video-wrapper {
+    height: min(56vh, 620px) !important;
+    aspect-ratio: auto !important;
+  }
+
+  .server-selector {
+    padding: 12px 20px !important;
+    gap: 10px !important;
+  }
 }
 
 /* Scrollbars */

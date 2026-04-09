@@ -186,6 +186,15 @@ async function showDetails(item) {
       }
     }
 
+    const seasonPicker = document.getElementById('season-picker');
+    const seasonDropdown = document.getElementById('season-dropdown');
+    if (seasonPicker) {
+      seasonPicker.style.display = currentItem.media_type === 'tv' ? 'flex' : 'none';
+    }
+    if (seasonDropdown && currentItem.media_type !== 'tv') {
+      seasonDropdown.innerHTML = '';
+    }
+
     // Show/hide season and episode dropdowns based on media type
     const modalDropdowns = document.querySelector('.modal-dropdowns');
     if (modalDropdowns) {
@@ -195,6 +204,16 @@ async function showDetails(item) {
     // Populate server buttons
     logDebug('Populating server buttons...');
     populateServerButtons();
+
+    if (currentItem.media_type === 'tv') {
+      const serverContainer = document.getElementById('server-buttons');
+      if (serverContainer && !serverContainer.querySelector('#server-dropdown')) {
+        populateServerButtons();
+      }
+      updateEpisodeNavButtons();
+    } else {
+      resetTvOnlyControls();
+    }
     
     // Try all servers in order and select the first working one
     const type = currentItem.media_type;
@@ -297,6 +316,67 @@ function populateServerButtons() {
   } catch (error) {
     logDebug(`Error in populateServerButtons: ${error.message}`);
   }
+}
+
+function renderSeasonDropdown(validSeasons, selectedSeason = null) {
+    const seasonPicker = document.getElementById('season-picker');
+    const seasonDropdown = document.getElementById('season-dropdown');
+
+    if (!seasonPicker || !seasonDropdown) return;
+
+    if (!currentItem || currentItem.media_type !== 'tv' || !Array.isArray(validSeasons) || validSeasons.length === 0) {
+        seasonDropdown.innerHTML = '';
+        seasonPicker.style.display = 'none';
+        return;
+    }
+
+    seasonPicker.style.display = 'flex';
+
+    const preferredSeason = String(selectedSeason || seasonDropdown.value || validSeasons[0].season_number);
+    seasonDropdown.innerHTML = '';
+
+    validSeasons.forEach((season) => {
+        const option = document.createElement('option');
+        option.value = String(season.season_number);
+        option.textContent = `Season ${season.season_number}`;
+        seasonDropdown.appendChild(option);
+    });
+
+    const hasPreferred = validSeasons.some(season => String(season.season_number) === preferredSeason);
+    seasonDropdown.value = hasPreferred ? preferredSeason : String(validSeasons[0].season_number);
+}
+
+function resetTvOnlyControls() {
+    const seasonPicker = document.getElementById('season-picker');
+    const seasonDropdown = document.getElementById('season-dropdown');
+    const nav = document.getElementById('episode-nav');
+    const prevBtn = document.getElementById('prev-ep-btn');
+    const nextBtn = document.getElementById('next-ep-btn');
+    const display = document.getElementById('current-ep-display');
+
+    if (seasonPicker) {
+        seasonPicker.style.display = 'none';
+    }
+
+    if (seasonDropdown) {
+        seasonDropdown.innerHTML = '';
+    }
+
+    if (nav) {
+        nav.style.display = 'none';
+    }
+
+    if (display) {
+        display.textContent = '-';
+    }
+
+    if (prevBtn) {
+        prevBtn.disabled = true;
+    }
+
+    if (nextBtn) {
+        nextBtn.disabled = true;
+    }
 }
 
 function changeServer(server) {
@@ -410,9 +490,11 @@ async function populateSeasonsAndEpisodes(showId) {
         logDebug(`TV Show Details: ${JSON.stringify(data)}`);        // Populate season tabs
         seasonTabs.innerHTML = '';
         // Filter out season 0 and sort seasons by number
-        const validSeasons = data.seasons
+        const validSeasons = (data.seasons || [])
             .filter(season => season.season_number > 0)
             .sort((a, b) => a.season_number - b.season_number);
+
+        renderSeasonDropdown(validSeasons);
 
         validSeasons.forEach((season) => {
             const tab = document.createElement('button');
@@ -429,6 +511,7 @@ async function populateSeasonsAndEpisodes(showId) {
         if (validSeasons.length > 0) {
             const firstTab = seasonTabs.firstChild;
             firstTab.classList.add('active');
+            renderSeasonDropdown(validSeasons, validSeasons[0].season_number);
             updateEpisodes(showId, validSeasons[0].season_number);
             logDebug(`Loading first valid season: ${validSeasons[0].season_number}`);
         } else {
@@ -443,6 +526,7 @@ async function populateSeasonsAndEpisodes(showId) {
 async function updateEpisodes(showId, seasonNumber) {
     const episodesList = document.getElementById('episodes-list');
     const seasonTabs = document.getElementById('season-tabs');
+    const seasonDropdown = document.getElementById('season-dropdown');
 
     if (!episodesList || !seasonTabs) {
         logDebug('Required DOM elements not found');
@@ -457,10 +541,17 @@ async function updateEpisodes(showId, seasonNumber) {
     Array.from(tabs).forEach(tab => {
         tab.classList.toggle('active', tab.dataset.seasonNumber === String(seasonNumber));
     });
+    if (seasonDropdown) {
+        seasonDropdown.value = String(seasonNumber);
+    }
 
     // Store current active server
-    const activeServerButton = document.querySelector('#server-buttons button.active');
-    const currentServer = activeServerButton ? activeServerButton.dataset.server : null;
+    let serverDropdown = document.getElementById('server-dropdown');
+    if (!serverDropdown) {
+        populateServerButtons();
+        serverDropdown = document.getElementById('server-dropdown');
+    }
+    const currentServer = serverDropdown ? serverDropdown.value : 'vidsrc.cc';
 
     try {
         const res = await fetch(`${BASE_URL}/tv/${showId}/season/${seasonNumber}?api_key=${API_KEY}`);
@@ -482,6 +573,7 @@ async function updateEpisodes(showId, seasonNumber) {
 
         if (!data.episodes || data.episodes.length === 0) {
             episodesList.innerHTML = '<div class="no-episodes">No episodes available for this season.</div>';
+            updateEpisodeNavButtons();
             return;
         }
 
@@ -515,13 +607,14 @@ async function updateEpisodes(showId, seasonNumber) {
         const firstEpisode = episodesList.firstElementChild;
         if (firstEpisode) {
             firstEpisode.classList.add('active');
-            if (currentServer) {
-                handleEpisodeClick(firstEpisode, currentServer, seasonNumber);
-            }
+            handleEpisodeClick(firstEpisode, currentServer, seasonNumber);
+        } else {
+            updateEpisodeNavButtons();
         }
     } catch (error) {
         logDebug(`Error in updateEpisodes: ${error.message}`);
         episodesList.innerHTML = '<div class="no-episodes">Error loading episodes. Please try again.</div>';
+        updateEpisodeNavButtons();
     }
 }
 
@@ -722,19 +815,16 @@ export function createStarRating(rating) {
 
 // Initialize event listeners
 function initVideoModalEvents() {
-    const seasonSelect = document.getElementById('season-select');
+    const seasonDropdown = document.getElementById('season-dropdown');
     const episodeSelect = document.getElementById('episode-select');
 
-    if (seasonSelect) {
-        seasonSelect.addEventListener('change', async () => {
-            logDebug(`Season changed: ${seasonSelect.value}`);
+    if (seasonDropdown && !seasonDropdown.dataset.bound) {
+        seasonDropdown.dataset.bound = 'true';
+        seasonDropdown.addEventListener('change', async () => {
+            logDebug(`Season changed: ${seasonDropdown.value}`);
             if (currentItem && currentItem.id) {
                 try {
-                    await updateEpisodes(currentItem.id, seasonSelect.value);
-                    const activeServerButton = document.querySelector('#server-buttons button.active');
-                    if (activeServerButton && activeServerButton.dataset.server) {
-                        changeServer(activeServerButton.dataset.server);
-                    }
+                    await updateEpisodes(currentItem.id, seasonDropdown.value);
                 } catch (error) {
                     logDebug(`Error handling season change: ${error}`);
                 }
@@ -750,6 +840,39 @@ function initVideoModalEvents() {
                 updateEpisodeDescription();
             } catch (error) {
                 logDebug(`Error handling episode change: ${error}`);
+            }
+        });
+    }
+    
+    const prevBtn = document.getElementById('prev-ep-btn');
+    const nextBtn = document.getElementById('next-ep-btn');
+
+    if (prevBtn && !prevBtn.dataset.bound) {
+        prevBtn.dataset.bound = 'true';
+        prevBtn.addEventListener('click', () => {
+            const activeEpisode = document.querySelector('.episode-item.active');
+            if (activeEpisode && activeEpisode.previousElementSibling) {
+                const prev = activeEpisode.previousElementSibling;
+                const serverDropdown = document.querySelector('#server-dropdown');
+                const server = serverDropdown ? serverDropdown.value : null;
+                const activeTab = document.querySelector('.season-tab.active');
+                const season = activeTab ? activeTab.dataset.seasonNumber : '1';
+                handleEpisodeClick(prev, server, season);
+            }
+        });
+    }
+
+    if (nextBtn && !nextBtn.dataset.bound) {
+        nextBtn.dataset.bound = 'true';
+        nextBtn.addEventListener('click', () => {
+            const activeEpisode = document.querySelector('.episode-item.active');
+            if (activeEpisode && activeEpisode.nextElementSibling) {
+                const next = activeEpisode.nextElementSibling;
+                const serverDropdown = document.querySelector('#server-dropdown');
+                const server = serverDropdown ? serverDropdown.value : null;
+                const activeTab = document.querySelector('.season-tab.active');
+                const season = activeTab ? activeTab.dataset.seasonNumber : '1';
+                handleEpisodeClick(next, server, season);
             }
         });
     }
@@ -774,6 +897,36 @@ export {
   currentItem
 };
 
+function updateEpisodeNavButtons() {
+    const prevBtn = document.getElementById('prev-ep-btn');
+    const nextBtn = document.getElementById('next-ep-btn');
+    const display = document.getElementById('current-ep-display');
+    const nav = document.getElementById('episode-nav');
+    
+    if (!prevBtn || !nextBtn || !display || !nav) return;
+
+    if (!currentItem || currentItem.media_type !== 'tv') {
+        nav.style.display = 'none';
+        return;
+    }
+    
+    nav.style.display = 'flex';
+    
+    const activeEpisode = document.querySelector('.episode-item.active');
+    if (!activeEpisode) {
+        display.textContent = '-';
+        prevBtn.disabled = true;
+        nextBtn.disabled = true;
+        return;
+    }
+    
+    display.textContent = activeEpisode.dataset.episodeNumber;
+    
+    // Check if prev/next exist in current list
+    prevBtn.disabled = !activeEpisode.previousElementSibling;
+    nextBtn.disabled = !activeEpisode.nextElementSibling;
+}
+
 function handleEpisodeClick(episodeItem, server, seasonNumber) {
     logDebug(`handleEpisodeClick called with episode ${episodeItem.dataset.episodeNumber}, season ${seasonNumber}, server ${server}`);
 
@@ -783,8 +936,7 @@ function handleEpisodeClick(episodeItem, server, seasonNumber) {
     episodeItem.classList.add('active');
 
     // Update video with new episode using the updateVideoIframe function
-    if (server && currentItem) {
-        const type = currentItem.media_type || (currentItem.first_air_date ? 'tv' : 'movie');
+    if (server || currentItem) {
         updateVideoIframe();
     }
 
@@ -794,6 +946,8 @@ function handleEpisodeClick(episodeItem, server, seasonNumber) {
     if (description && descriptionContainer) {
         descriptionContainer.textContent = description.textContent;
     }
+    
+    updateEpisodeNavButtons();
 }
 
 function tryNextServer(currentServer) {
