@@ -321,16 +321,31 @@ async function searchTMDB() {
         if (data.results.length > 0) {
             data.results.forEach(item => {
                 if (!item.poster_path) return;
+                const title = item.title || item.name || 'Untitled';
+                const card = document.createElement('button');
+                card.type = 'button';
+                card.className = 'search-result-card';
+                card.setAttribute('aria-label', `Open ${title}`);
+
                 const img = document.createElement('img');
+                img.className = 'search-result-poster';
                 img.src = `${IMG_URL}${item.poster_path}`;
-                img.alt = item.title || item.name;
-                img.onclick = () => {
+                img.alt = title;
+
+                const titleElement = document.createElement('span');
+                titleElement.className = 'search-result-title';
+                titleElement.textContent = title;
+
+                card.appendChild(img);
+                card.appendChild(titleElement);
+
+                card.onclick = () => {
                     showDetails(item);
                     document.getElementById('navbar-search').value = '';
                     searchResultsSection.style.display = 'none';
                     mainContent.style.display = 'block';
                 };
-                resultsContainer.appendChild(img);
+                resultsContainer.appendChild(card);
             });
         } else {
             resultsContainer.innerHTML = '<div class="no-results">No results found</div>';
@@ -341,19 +356,59 @@ async function searchTMDB() {
     }
 }
 
+function isMobileSearchMode() {
+    return window.matchMedia('(max-width: 768px)').matches;
+}
+
+function setMobileSearchOpen(isOpen, options = {}) {
+    const { clear = false } = options;
+    const searchContainer = document.querySelector('.search-container');
+    const searchToggle = document.getElementById('search-toggle');
+    const searchBar = document.getElementById('navbar-search');
+
+    if (!searchContainer || !searchToggle || !searchBar || !isMobileSearchMode()) {
+        return;
+    }
+
+    searchContainer.classList.toggle('is-open', isOpen);
+    searchToggle.setAttribute('aria-expanded', String(isOpen));
+    searchToggle.setAttribute('aria-label', isOpen ? 'Close search' : 'Open search');
+
+    if (clear) {
+        searchBar.value = '';
+    }
+
+    if (isOpen) {
+        requestAnimationFrame(() => searchBar.focus());
+    } else {
+        searchBar.blur();
+    }
+}
+
 // Close search results when clicking outside search container
 document.addEventListener('click', (e) => {
     const searchBar = document.getElementById('navbar-search');
+    const searchContainer = document.querySelector('.search-container');
     const searchResultsSection = document.getElementById('search-results');
     const mainContent = document.getElementById('main-content');
     const browseContent = document.getElementById('browse-content');
-  
-    if (e.target !== searchBar && !searchResultsSection.contains(e.target)) {
+
+    if (!searchBar || !searchResultsSection || !mainContent || !browseContent) {
+        return;
+    }
+
+    const clickedInsideSearch = searchContainer?.contains(e.target);
+    const clickedInsideResults = searchResultsSection.contains(e.target);
+
+    if (!clickedInsideSearch && !clickedInsideResults) {
         searchResultsSection.style.display = 'none';
         if (browseContent.style.display !== 'block') {
             mainContent.style.display = 'block';
         }
-        searchBar.value = '';
+        setMobileSearchOpen(false, { clear: true });
+        if (!isMobileSearchMode()) {
+            searchBar.value = '';
+        }
     }
 });
 
@@ -479,9 +534,46 @@ function initializeEventListeners() {
     });
 
     // Search input
-    document.getElementById('navbar-search').addEventListener('input', () => {
+    const searchBar = document.getElementById('navbar-search');
+    const searchToggle = document.getElementById('search-toggle');
+
+    searchBar.addEventListener('focus', () => {
+        if (isMobileSearchMode()) {
+            setMobileSearchOpen(true);
+        }
+    });
+
+    searchBar.addEventListener('input', () => {
+        if (isMobileSearchMode()) {
+            setMobileSearchOpen(true);
+        }
         searchTMDB();
     });
+
+    if (searchToggle) {
+        searchToggle.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const isOpen = document.querySelector('.search-container')?.classList.contains('is-open');
+            const searchResultsSection = document.getElementById('search-results');
+            const mainContent = document.getElementById('main-content');
+            const browseContent = document.getElementById('browse-content');
+
+            if (isOpen) {
+                if (searchResultsSection) {
+                    searchResultsSection.style.display = 'none';
+                }
+                if (mainContent && browseContent && browseContent.style.display !== 'block') {
+                    mainContent.style.display = 'block';
+                }
+                setMobileSearchOpen(false, { clear: true });
+                return;
+            }
+
+            setMobileSearchOpen(true);
+        });
+    }
 
     // Theme toggle
     document.getElementById('theme-toggle').addEventListener('click', () => {

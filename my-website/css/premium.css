@@ -649,26 +649,133 @@ body {
 @media (max-width: 768px) {
   /* Banner adjustments */
   .banner {
-    padding: 100px 5% 40px 5% !important;
+    padding: 92px 16px 28px !important;
     height: auto !important;
-    min-height: 70vh !important;
+    min-height: 72svh !important;
+    background-position: 68% center !important;
+    align-items: center !important;
+    text-align: center !important;
+  }
+  .banner::before {
+    background: linear-gradient(180deg, rgba(10, 10, 15, 0.36) 0%, rgba(10, 10, 15, 0.74) 38%, rgba(10, 10, 15, 0.95) 100%) !important;
+  }
+  .banner-content {
+    max-width: min(100%, 28rem) !important;
+    width: min(100%, 28rem) !important;
+    margin: 0 auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
   }
   .banner h1 {
-    font-size: 2.8rem !important;
-    margin-bottom: 15px !important;
+    font-size: clamp(2.35rem, 11vw, 3.3rem) !important;
+    line-height: 0.95 !important;
+    max-width: 11ch !important;
+    margin-bottom: 12px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    text-wrap: balance;
   }
   .banner p {
-    font-size: 1.1rem !important;
+    display: -webkit-box !important;
+    max-width: 32ch !important;
+    font-size: 0.98rem !important;
+    line-height: 1.55 !important;
+    margin-bottom: 18px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    -webkit-line-clamp: 4;
+    line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
   .banner-buttons {
     flex-direction: column !important;
     gap: 1rem !important;
+    width: min(100%, 22rem) !important;
+    margin: 0 auto !important;
+    align-items: center !important;
+  }
+  .banner-button {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 14px 20px !important;
+    font-size: 1rem !important;
   }
   
   /* Navbar adjust */
   .navbar {
-    height: 70px !important;
+    height: 78px !important;
+    min-height: 78px !important;
     padding: 0 15px !important;
+    align-items: center !important;
+    gap: 8px !important;
+  }
+
+  .nav-links {
+    display: flex !important;
+    flex: 1 1 auto !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    column-gap: 8px !important;
+  }
+
+  .search-container {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    position: relative !important;
+    flex: 0 0 42px !important;
+    width: 42px !important;
+    min-width: 42px !important;
+    max-width: 42px !important;
+    overflow: hidden !important;
+    margin-top: 0 !important;
+    transition: flex-basis 0.25s ease, width 0.25s ease, max-width 0.25s ease !important;
+  }
+
+  .search-container.is-open {
+    flex-basis: min(44vw, 208px) !important;
+    width: min(44vw, 208px) !important;
+    max-width: min(44vw, 208px) !important;
+  }
+
+  .search-toggle {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    position: relative !important;
+    z-index: 2 !important;
+  }
+
+  .search-bar {
+    position: absolute !important;
+    top: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    min-height: 42px !important;
+    height: 42px !important;
+    padding: 10px 14px 10px 42px !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transform: translateX(8px) !important;
+    transition: opacity 0.2s ease, transform 0.25s ease !important;
+  }
+
+  .search-container.is-open .search-bar {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    transform: translateX(0) !important;
+  }
+
+  .browse-btn {
+    order: 0 !important;
+  }
+
+  .theme-toggle {
+    order: 0 !important;
   }
 
   /* Server buttons must wrap or scroll */
@@ -734,8 +841,44 @@ body {
 }
 
 @media (max-width: 480px) {
+  .navbar {
+    height: 72px !important;
+    min-height: 72px !important;
+    padding: 0 10px !important;
+  }
+  .search-container {
+    flex-basis: 38px !important;
+    width: 38px !important;
+    min-width: 38px !important;
+    max-width: 38px !important;
+  }
+  .search-container.is-open {
+    flex-basis: min(46vw, 180px) !important;
+    width: min(46vw, 180px) !important;
+    max-width: min(46vw, 180px) !important;
+  }
+  .search-toggle {
+    width: 38px !important;
+    height: 38px !important;
+    flex-basis: 38px !important;
+  }
+  .search-bar {
+    min-height: 38px !important;
+    height: 38px !important;
+    padding: 9px 12px 9px 38px !important;
+  }
+  .banner {
+    padding: 82px 14px 24px !important;
+    min-height: 68svh !important;
+  }
   .banner h1 {
-    font-size: 2.2rem !important;
+    font-size: clamp(2rem, 10vw, 2.6rem) !important;
+  }
+  .banner p {
+    font-size: 0.92rem !important;
+    max-width: 29ch !important;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
   }
   .row h2 {
     font-size: 1.4rem !important;
