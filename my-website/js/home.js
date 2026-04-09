@@ -118,7 +118,7 @@ async function fetchTrendingKDramas() {
   
   // Fetch from multiple pages to get more K-dramas
   for (let page = 1; page <= 3; page++) {
-    const res = await fetch(`${BASE_URL}/discover/tv?api_key=${API_KEY}&with_original_language=ko&sort_by=popularity.desc&first_air_date.gte=2024-01-01&first_air_date.lte=2025-12-31&page=${page}`);
+    const res = await fetch(`${BASE_URL}/discover/tv?api_key=${API_KEY}&with_original_language=ko&sort_by=popularity.desc&first_air_date.gte=2025-06-01&page=${page}`);
     const data = await res.json();
     // Filter to ensure we only get Korean dramas (exclude variety shows, etc.)
     const filtered = data.results.filter(item => 
@@ -550,6 +550,24 @@ function initListNavigation() {
 
         list.addEventListener('mouseup', stopDragging);
         list.addEventListener('mouseleave', stopDragging);
+
+        // Add scroll button click handlers
+        const wrapper = list.closest('.list-wrapper');
+        if (wrapper) {
+            const leftBtn = wrapper.querySelector('.scroll-btn.left');
+            const rightBtn = wrapper.querySelector('.scroll-btn.right');
+            
+            if (leftBtn) {
+                leftBtn.addEventListener('click', () => {
+                    list.scrollBy({ left: -list.clientWidth * 0.8, behavior: 'smooth' });
+                });
+            }
+            if (rightBtn) {
+                rightBtn.addEventListener('click', () => {
+                    list.scrollBy({ left: list.clientWidth * 0.8, behavior: 'smooth' });
+                });
+            }
+        }
     });
 }
 

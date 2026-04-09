@@ -163,8 +163,27 @@ async function showDetails(item) {
 
     // Show/hide season and episode section based on media type
     const episodesSection = document.querySelector('.episodes-section');
+    const modalContent = document.querySelector('.modal-content');
+    
+    // Clear old data immediately to prevent flickering of wrong episodes
+    const seasonTabs = document.getElementById('season-tabs');
+    const episodesList = document.getElementById('episodes-list');
+    if (seasonTabs) seasonTabs.innerHTML = '';
+    if (episodesList) episodesList.innerHTML = '';
+
     if (episodesSection) {
       episodesSection.style.display = currentItem.media_type === 'tv' ? 'flex' : 'none';
+      
+      // Update Grid Layout Class
+      if (modalContent) {
+          if (currentItem.media_type === 'tv') {
+              modalContent.classList.remove('is-movie-modal');
+              modalContent.classList.add('is-tv-modal');
+          } else {
+              modalContent.classList.remove('is-tv-modal');
+              modalContent.classList.add('is-movie-modal');
+          }
+      }
     }
 
     // Show/hide season and episode dropdowns based on media type
@@ -254,24 +273,26 @@ function populateServerButtons() {
       }))
     ];
 
-    logDebug(`Created ${servers.length} server buttons`);
+    logDebug(`Created ${servers.length} server options`);
+    
+    container.innerHTML = '<select id="server-dropdown" class="server-dropdown"></select>';
+    const select = container.querySelector('#server-dropdown');
+
     servers.forEach(server => {
-      const button = document.createElement('button');
-      button.className = 'server-btn';
-      button.textContent = server.name;
-      button.dataset.server = server.id;
-      button.dataset.url = server.url;
-      button.onclick = () => changeServer(server.id);
-      container.appendChild(button);
+      const option = document.createElement('option');
+      option.value = server.id;
+      option.textContent = server.name;
+      option.dataset.url = server.url;
+      select.appendChild(option);
     });
 
+    select.addEventListener('change', (e) => changeServer(e.target.value));
+
     // Set first server as active by default
-    const firstButton = container.querySelector('.server-btn');
-    if (firstButton) {
-      firstButton.classList.add('active');
-      changeServer(firstButton.dataset.server);
+    if (servers.length > 0) {
+      changeServer(servers[0].id);
     } else {
-      logDebug('Error: No server buttons were created');
+      logDebug('Error: No server options were created');
     }
   } catch (error) {
     logDebug(`Error in populateServerButtons: ${error.message}`);
@@ -284,12 +305,10 @@ function changeServer(server) {
     return;
   }
 
-  // Update active button state
-  const buttons = document.querySelectorAll('.server-btn');
-  buttons.forEach(btn => btn.classList.remove('active'));
-  const activeButton = Array.from(buttons).find(btn => btn.dataset.server === server);
-  if (activeButton) {
-    activeButton.classList.add('active');
+  // Update active dropdown state
+  const dropdown = document.getElementById('server-dropdown');
+  if (dropdown && dropdown.value !== server) {
+    dropdown.value = server;
   }
 
   const type = currentItem.media_type || (currentItem.first_air_date ? 'tv' : 'movie');
@@ -508,19 +527,19 @@ async function updateEpisodes(showId, seasonNumber) {
 
 function updateVideoIframe() {
     const videoFrame = document.getElementById('modal-video');
-    const activeServerButton = document.querySelector('#server-buttons button.active');
+    const dropdown = document.getElementById('server-dropdown');
     
-    if (!videoFrame || !activeServerButton || !currentItem) {
+    if (!videoFrame || !dropdown || !currentItem) {
         logDebug('Missing required elements for video update');
         return;
     }
 
     // Ensure iframe has proper attributes
     videoFrame.setAttribute('allowfullscreen', 'true');
-    videoFrame.setAttribute('allow', 'encrypted-media');
-    videoFrame.setAttribute('sandbox', 'allow-forms allow-scripts allow-same-origin');
+    videoFrame.setAttribute('allow', 'encrypted-media autoplay');
+    videoFrame.removeAttribute('sandbox');
     
-    const server = activeServerButton.dataset.server;
+    const server = dropdown.value;
     logDebug(`Active server: ${server}`);
     
     const type = currentItem.media_type || (currentItem.first_air_date ? 'tv' : 'movie');
@@ -554,8 +573,7 @@ function updateVideoIframe() {
         
         // Set comprehensive security attributes
         newFrame.setAttribute('allowfullscreen', 'true');
-        newFrame.setAttribute('allow', 'encrypted-media; picture-in-picture');
-        newFrame.setAttribute('sandbox', 'allow-forms allow-scripts allow-same-origin allow-presentation');
+        newFrame.setAttribute('allow', 'encrypted-media; picture-in-picture; autoplay');
         newFrame.setAttribute('loading', 'lazy');
         newFrame.setAttribute('referrerpolicy', 'no-referrer');
         

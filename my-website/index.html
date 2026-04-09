@@ -29,10 +29,16 @@
   <!-- Canonical URL -->
   <link rel="canonical" href="https://justflixmovies.pages.dev">
   
+  <!-- Modern Font: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
   <!-- Stylesheets with preload -->
   <link rel="stylesheet" href="css/home.css" media="print" onload="this.media='all'">
   <link rel="stylesheet" href="css/videoModal.css" media="print" onload="this.media='all'">
   <link rel="stylesheet" href="css/browse.css" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="css/premium.css" media="print" onload="this.media='all'">
   
   <!-- Module preloads -->
   <link rel="modulepreload" href="js/videoModal.js">
@@ -206,7 +212,9 @@
       <div class="row-header">
         <h2>Trending Movies</h2>
       </div>      <div class="list-wrapper">
+        <button class="scroll-btn left"><i class="fas fa-chevron-left"></i></button>
         <div class="list" id="movies-list"></div>
+        <button class="scroll-btn right"><i class="fas fa-chevron-right"></i></button>
       </div>
     </div>
 
@@ -214,7 +222,9 @@
       <div class="row-header">
         <h2>Trending TV Shows</h2>
       </div>      <div class="list-wrapper">
+        <button class="scroll-btn left"><i class="fas fa-chevron-left"></i></button>
         <div class="list" id="tvshows-list"></div>
+        <button class="scroll-btn right"><i class="fas fa-chevron-right"></i></button>
       </div>
     </div>
 
@@ -222,7 +232,9 @@
       <div class="row-header">
         <h2>Trending Anime</h2>
       </div>      <div class="list-wrapper">
+        <button class="scroll-btn left"><i class="fas fa-chevron-left"></i></button>
         <div class="list" id="anime-list"></div>
+        <button class="scroll-btn right"><i class="fas fa-chevron-right"></i></button>
       </div>
     </div>
 
@@ -230,7 +242,9 @@
       <div class="row-header">
         <h2>Korean Dramas</h2>
       </div>      <div class="list-wrapper">
+        <button class="scroll-btn left"><i class="fas fa-chevron-left"></i></button>
         <div class="list" id="kdramas-list"></div>
+        <button class="scroll-btn right"><i class="fas fa-chevron-right"></i></button>
       </div>
     </div>
   </div>

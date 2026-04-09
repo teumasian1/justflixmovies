@@ -1,0 +1,692 @@
+/*
+ * Premium Overhaul UI
+ */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  --bg-primary: #0a0a0f !important; /* Deep rich dark */
+  --bg-secondary: #13141c !important;
+  --accent-color: #ff2a5f !important;
+  --accent-gradient: linear-gradient(135deg, #ff2a5f 0%, #ff7142 100%) !important;
+  --text-primary: #ffffff !important;
+  --text-secondary: #a0a5b5 !important;
+  --glass-bg: rgba(20, 20, 30, 0.6) !important;
+  --glass-border: rgba(255, 255, 255, 0.08) !important;
+}
+
+body {
+  font-family: 'Outfit', sans-serif !important;
+  background-color: var(--bg-primary) !important;
+  background-image: 
+    radial-gradient(circle at 15% 50%, rgba(255, 42, 95, 0.08), transparent 25%),
+    radial-gradient(circle at 85% 30%, rgba(66, 135, 245, 0.08), transparent 25%) !important;
+  background-attachment: fixed;
+  color: var(--text-primary) !important;
+  min-height: 100vh;
+}
+
+/* Navbar */
+.navbar {
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  border-bottom: 1px solid var(--glass-border) !important;
+  height: 85px !important;
+  padding: 0 4% !important;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3) !important;
+}
+
+.nav-links a {
+  font-weight: 500 !important;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 0.85rem;
+  opacity: 0.8;
+  transition: all 0.3s ease !important;
+  position: relative;
+}
+
+.nav-links a:hover {
+  opacity: 1 !important;
+  color: var(--accent-color) !important;
+}
+
+.nav-links a::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 0%;
+  height: 2px;
+  background: var(--accent-gradient);
+  transition: width 0.3s ease;
+}
+
+.nav-links a:hover::after {
+  width: 100%;
+}
+
+.browse-btn {
+  background: var(--accent-gradient) !important;
+  border: none !important;
+  border-radius: 30px !important;
+  padding: 10px 24px !important;
+  color: #fff !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.5px;
+  box-shadow: 0 10px 20px rgba(255, 42, 95, 0.3) !important;
+  transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+}
+
+.browse-btn:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 15px 25px rgba(255, 42, 95, 0.4) !important;
+  background: var(--accent-gradient) !important;
+}
+
+.search-bar {
+  background: rgba(255,255,255,0.05) !important;
+  border: 1px solid var(--glass-border) !important;
+  border-radius: 30px !important;
+  padding: 12px 24px !important;
+  font-family: inherit;
+  transition: all 0.3s ease !important;
+  color: #fff !important;
+}
+
+.search-bar:focus {
+  background: rgba(255,255,255,0.1) !important;
+  border-color: var(--accent-color) !important;
+  box-shadow: 0 0 15px rgba(255, 42, 95, 0.2) !important;
+  outline: none;
+}
+
+/* Banner */
+.banner {
+  height: 90vh !important;
+  padding: 80px 6% !important;
+  position: relative;
+  background-attachment: scroll !important; /* Fixed parallax can bug sometimes */
+}
+
+.banner::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(90deg, rgba(10,10,15,0.95) 0%, rgba(10,10,15,0.6) 50%, rgba(10,10,15,0) 100%) !important;
+  z-index: 1;
+}
+
+.banner::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(0deg, var(--bg-primary) 0%, transparent 40%) !important;
+  z-index: 1;
+}
+
+.banner-content {
+  position: relative;
+  z-index: 2;
+  max-width: 700px !important;
+  animation: fadeUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fadeUp {
+  0% { opacity: 0; transform: translateY(40px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.banner h1 {
+  font-family: 'Outfit', sans-serif !important;
+  font-size: 4.5rem !important;
+  font-weight: 800 !important;
+  letter-spacing: -1.5px !important;
+  line-height: 1.1 !important;
+  margin-bottom: 24px !important;
+  text-shadow: 0 10px 30px rgba(0,0,0,0.8) !important;
+}
+
+.banner p {
+  font-size: 1.25rem !important;
+  line-height: 1.6 !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+  margin-bottom: 40px !important;
+  font-weight: 300 !important;
+  max-width: 600px;
+}
+
+.banner-buttons {
+  display: flex !important;
+  gap: 1.5rem !important;
+}
+
+.banner-button.play {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border-radius: 30px !important;
+  padding: 16px 40px !important;
+  font-weight: 700 !important;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 10px 20px rgba(255,255,255,0.2) !important;
+}
+
+.banner-button.play:hover {
+  transform: scale(1.05);
+  background: #ffffff !important;
+  box-shadow: 0 15px 30px rgba(255,255,255,0.3) !important;
+}
+
+.banner-button.more-info {
+  background: rgba(255,255,255,0.15) !important;
+  backdrop-filter: blur(10px) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+  color: #ffffff !important;
+  border-radius: 30px !important;
+  padding: 16px 40px !important;
+  font-weight: 600 !important;
+}
+
+.banner-button.more-info:hover {
+  background: rgba(255,255,255,0.25) !important;
+  transform: scale(1.05);
+}
+
+/* Rows and Posters */
+.row {
+  margin: 50px 0 !important;
+  position: relative;
+  z-index: 10;
+}
+
+.row h2 {
+  font-size: 1.8rem !important;
+  font-weight: 700 !important;
+  padding: 0 4% !important;
+  margin-bottom: 25px !important;
+  letter-spacing: -0.5px;
+}
+
+.row h2::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 24px;
+  background: var(--accent-gradient);
+  margin-right: 15px;
+  border-radius: 4px;
+  vertical-align: middle;
+}
+
+.list-wrapper {
+  padding: 10px 4% !important;
+}
+
+.list .poster-container {
+  width: 240px !important;
+  height: 360px !important;
+  border-radius: 16px !important;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.5) !important;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+}
+
+.list .poster-container img {
+  border-radius: 16px !important;
+}
+
+.list .poster-container:hover {
+  transform: translateY(-15px) scale(1.05) !important;
+  box-shadow: 0 25px 50px rgba(255, 42, 95, 0.25) !important;
+  border: 1px solid rgba(255, 42, 95, 0.4) !important;
+  z-index: 100;
+}
+
+.poster-overlay {
+  background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.7) 40%, transparent 100%) !important;
+  backdrop-filter: blur(2px) !important;
+  border-bottom-left-radius: 16px;
+  border-bottom-right-radius: 16px;
+  padding: 30px 20px 20px 20px !important;
+}
+
+.poster-title {
+  font-family: inherit !important;
+  font-weight: 700 !important;
+  font-size: 1.2rem !important;
+  margin-bottom: 12px !important;
+  line-height: 1.3 !important;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.8) !important;
+}
+
+.rating i.fas.fa-star {
+  color: var(--accent-color) !important;
+  text-shadow: 0 0 10px rgba(255, 42, 95, 0.5);
+}
+
+.scroll-btn {
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(10px) !important;
+  border: 1px solid var(--glass-border) !important;
+  width: 55px !important;
+  height: 55px !important;
+  font-size: 1.4rem !important;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.5) !important;
+}
+
+.scroll-btn:hover {
+  background: var(--accent-gradient) !important;
+  border-color: transparent !important;
+  box-shadow: 0 15px 30px rgba(255, 42, 95, 0.4) !important;
+}
+
+.scroll-btn.left { left: 20px !important; }
+.scroll-btn.right { right: 20px !important; }
+
+/* Cinematic Modal Premium Overhaul */
+.modal {
+  padding: 4vh 2vw !important;
+  overflow-y: auto !important;
+  backdrop-filter: blur(10px);
+  background: rgba(0,0,0,0.85) !important;
+}
+
+.modal-content {
+  background: var(--bg-secondary) !important;
+  border: 1px solid var(--glass-border) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.9), 0 0 50px rgba(255, 42, 95, 0.1) !important;
+  margin: 0 auto !important;
+  width: 100% !important;
+  max-width: 1500px !important;
+  position: relative !important;
+  display: block !important;
+  max-height: none !important;
+  overflow: hidden !important; /* Keep rounded corners */
+}
+
+/* When viewing a movie, collapse the episodes column and expand video */
+.modal-content.is-movie-modal {
+  max-width: 1200px !important; /* Slightly narrower since there's no sidebar */
+}
+
+.modal-content.is-movie-modal .modal-main {
+  margin-right: 0 !important;
+}
+
+@media (max-width: 1200px) {
+  .modal-content {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  .modal-main {
+    margin-right: 0 !important;
+  }
+  .episodes-section {
+    position: static !important;
+    width: 100% !important;
+    height: auto !important;
+  }
+}
+
+.modal-main {
+  background: var(--bg-secondary) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  margin-right: 400px !important;
+}
+
+.video-section {
+  width: 100% !important;
+  height: auto !important;
+  aspect-ratio: 16 / 9 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  background: #000 !important;
+}
+
+.server-selector {
+  position: relative !important;
+  height: auto !important;
+  background: transparent !important;
+  padding: 20px 30px !important;
+  border-bottom: none !important;
+  z-index: 10 !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 15px !important;
+}
+
+.server-selector h3 {
+  margin: 0 !important;
+  font-size: 1.1rem !important;
+  color: var(--text-secondary) !important;
+  font-weight: 500 !important;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.server-dropdown {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #fff !important;
+  padding: 10px 20px !important;
+  border-radius: 12px !important;
+  font-family: inherit !important;
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  outline: none !important;
+  min-width: 220px !important;
+  max-width: 100% !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
+}
+
+.server-dropdown:hover, .server-dropdown:focus {
+  background: rgba(255, 42, 95, 0.1) !important;
+  border-color: var(--accent-color) !important;
+  box-shadow: 0 0 15px rgba(255, 42, 95, 0.3) !important;
+}
+
+.server-dropdown option {
+  background: var(--bg-primary) !important;
+  color: #fff !important;
+  font-weight: 600 !important;
+  padding: 12px !important;
+}
+
+.video-wrapper {
+  margin: 0 !important;
+  height: 100% !important;
+  flex: 1 !important;
+}
+
+.modal-body {
+  padding: 40px !important;
+  gap: 30px !important;
+  align-items: center !important;
+  background: linear-gradient(0deg, var(--bg-primary) 0%, var(--bg-secondary) 100%) !important;
+}
+
+.modal-image {
+  flex: 0 0 200px !important;
+  height: 300px !important;
+}
+
+.modal-image img {
+  border-radius: 12px !important;
+  box-shadow: 0 15px 30px rgba(0,0,0,0.5) !important;
+}
+
+.modal-text {
+  gap: 15px !important;
+}
+
+.modal-text h2 {
+  font-family: inherit !important;
+  font-size: 2.5rem !important;
+  font-weight: 800 !important;
+  color: #fff !important;
+}
+
+.modal-meta {
+  gap: 20px !important;
+}
+
+.modal-meta .release-date, .modal-meta .genre {
+  background: rgba(255,255,255,0.1) !important;
+  color: #fff !important;
+  padding: 6px 12px !important;
+  border-radius: 6px !important;
+  font-weight: 500 !important;
+}
+
+#episode-description {
+  font-size: 1.1rem !important;
+  line-height: 1.6 !important;
+  color: rgba(255,255,255,0.8) !important;
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+.episodes-section {
+  position: absolute !important;
+  top: 0; right: 0; bottom: 0;
+  width: 400px !important;
+  background: var(--bg-primary) !important;
+  border-left: 1px solid var(--glass-border) !important;
+  display: flex;
+  flex-direction: column !important;
+  max-height: none !important;
+}
+
+.seasons-bar {
+  background: transparent !important;
+  padding: 25px 25px 10px 25px !important;
+  border-bottom: 1px solid var(--glass-border) !important;
+}
+
+.seasons-bar h3 {
+  font-size: 1.4rem !important;
+  font-weight: 700 !important;
+  color: #fff !important;
+}
+
+.season-tabs {
+  gap: 12px !important;
+  margin-top: 15px !important;
+}
+
+.season-tab {
+  background: rgba(255,255,255,0.05) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+  border-radius: 8px !important;
+  padding: 10px 20px !important;
+  font-weight: 600 !important;
+  color: var(--text-secondary) !important;
+}
+
+.season-tab:hover {
+  background: rgba(255,255,255,0.15) !important;
+  color: #fff !important;
+}
+
+.season-tab.active {
+  background: var(--accent-gradient) !important;
+  color: #fff !important;
+  border-color: transparent !important;
+}
+
+.episodes-list {
+  padding: 25px !important;
+  flex: 1 !important;
+  overflow-y: auto !important;
+  margin-bottom: 20px !important; /* Pad bottom so it reaches the edge neatly */
+}
+
+.episode-item {
+  background: rgba(255,255,255,0.03) !important;
+  border: 1px solid transparent !important;
+  border-radius: 12px !important;
+  padding: 15px !important;
+  align-items: center !important;
+}
+
+.episode-item:hover {
+  background: rgba(255,255,255,0.08) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.3) !important;
+}
+
+.episode-item.active {
+  background: rgba(255,42,95,0.1) !important;
+  border-color: rgba(255,42,95,0.3) !important;
+}
+
+.episode-thumbnail {
+  width: 140px !important;
+  height: 80px !important;
+  border-radius: 8px !important;
+}
+
+.episode-title {
+  font-family: inherit !important;
+  font-size: 1.1rem !important;
+  font-weight: 700 !important;
+}
+
+.episode-number {
+  color: var(--accent-color) !important;
+  font-weight: 600 !important;
+}
+
+/* =========================================================================
+   Mobile Responsiveness Adjustments
+   ========================================================================= */
+
+@media (max-width: 900px) {
+  .modal {
+    padding: 2vh 2vw !important;
+  }
+  .modal-body {
+    flex-direction: column !important;
+    text-align: center !important;
+    padding: 30px 20px !important;
+  }
+  .modal-meta {
+    justify-content: center !important;
+  }
+  .modal-image {
+    flex: 0 0 auto !important;
+    height: 250px !important;
+    width: auto !important;
+  }
+  .modal-image img {
+    height: 100% !important;
+    width: auto !important;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Banner adjustments */
+  .banner {
+    padding: 100px 5% 40px 5% !important;
+    height: auto !important;
+    min-height: 70vh !important;
+  }
+  .banner h1 {
+    font-size: 2.8rem !important;
+    margin-bottom: 15px !important;
+  }
+  .banner p {
+    font-size: 1.1rem !important;
+  }
+  .banner-buttons {
+    flex-direction: column !important;
+    gap: 1rem !important;
+  }
+  
+  /* Navbar adjust */
+  .navbar {
+    height: 70px !important;
+    padding: 0 15px !important;
+  }
+
+  /* Server buttons must wrap or scroll */
+  .server-selector {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    padding: 15px !important;
+    gap: 10px !important;
+  }
+  
+  .server-dropdown {
+    width: 100% !important;
+    font-size: 1.1rem !important;
+    padding: 12px 20px !important;
+  }
+  
+  /* Reduce excessive paddings */
+  .episodes-list {
+    padding: 15px !important;
+  }
+  .seasons-bar {
+    padding: 15px !important;
+  }
+  
+  .episode-item {
+    flex-direction: column !important;
+    text-align: left !important;
+    gap: 15px !important;
+  }
+  .episode-thumbnail {
+    width: 100% !important;
+    height: auto !important;
+    aspect-ratio: 16 / 9;
+  }
+}
+
+@media (max-width: 480px) {
+  .banner h1 {
+    font-size: 2.2rem !important;
+  }
+  .row h2 {
+    font-size: 1.4rem !important;
+    padding: 0 15px !important;
+  }
+  .list-wrapper {
+    padding: 10px 15px !important;
+  }
+  .list .poster-container {
+    width: 160px !important;
+    height: 240px !important;
+  }
+  .modal-text h2 {
+    font-size: 1.8rem !important;
+  }
+  .close-button {
+    width: 35px !important;
+    height: 35px !important;
+    top: 10px !important;
+    right: 10px !important;
+  }
+}
+
+.close-button {
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(10px) !important;
+  border: 1px solid var(--glass-border) !important;
+  border-radius: 50% !important;
+  width: 45px !important;
+  height: 45px !important;
+  top: 20px !important;
+  right: 20px !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  transition: all 0.3s ease !important;
+}
+
+.close-button:hover {
+  background: var(--accent-color) !important;
+  transform: rotate(90deg) scale(1.1) !important;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--glass-border);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-color);
+}
