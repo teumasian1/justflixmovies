@@ -303,6 +303,16 @@ select {
     color: var(--accent-color);
 }
 
+.browse-btn,
+.theme-toggle,
+.search-toggle,
+.banner-button,
+.search-bar {
+    -webkit-appearance: none;
+    appearance: none;
+    font: inherit;
+}
+
 .search-toggle {
     display: none;
     align-items: center;
@@ -1010,6 +1020,7 @@ body {
     padding: 10px 14px 10px 42px !important;
     border-radius: 999px !important;
     opacity: 0;
+    visibility: hidden;
     pointer-events: none;
     transform: translateX(8px);
     transition: opacity 0.2s ease, transform 0.25s ease;
@@ -1017,6 +1028,7 @@ body {
 
   .search-container.is-open .search-bar {
     opacity: 1;
+    visibility: visible;
     pointer-events: auto;
     transform: translateX(0);
   }
