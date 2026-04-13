@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="referrer" content="no-referrer">
+  <title>JustFlixMovies - Watch Movies & TV Shows Online</title>
+  
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="Watch the latest movies and TV shows online. Stream your favorite content in HD quality. New releases, popular series, and more.">
+  <meta name="keywords" content="movies, tv shows, watch online, streaming, series, films, entertainment">
+  <meta name="robots" content="index, follow">
+  <meta name="author" content="JustFlixMovies">
+  
+  <!-- Open Graph Meta Tags -->
+  <meta property="og:title" content="JustFlixMovies - Watch Movies & TV Shows Online">
+  <meta property="og:description" content="Stream the latest movies and TV shows in HD quality. Watch your favorite content instantly.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://justflixmovies.pages.dev">
+  <meta property="og:image" content="lulu.png">
+  <meta name="google-site-verification" content="jrk3yYrSslYrfXTXmEpH3QDLLQ7IwNRTWOGh-lkqpJE" />
+  
+  <!-- Twitter Card Meta Tags -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="JustFlixMovies - Watch Movies & TV Shows">
+  <meta name="twitter:description" content="Stream the latest movies and TV shows in HD quality. Watch your favorite content instantly.">
+  <meta name="twitter:image" content="lulu.png">
+  
+  <!-- Canonical URL -->
+  <link rel="canonical" href="https://justflixmovies.pages.dev">
+  
+  <!-- Modern Font: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/home.css">
+  <link rel="stylesheet" href="css/videoModal.css">
+  <link rel="stylesheet" href="css/browse.css">
+  <link rel="stylesheet" href="css/premium.css">
+  
+  <!-- Module preloads -->
+  <link rel="modulepreload" href="js/videoModal.js">
+  <link rel="modulepreload" href="js/home.js">
+  <link rel="modulepreload" href="js/genres.js">
+  <link rel="modulepreload" href="js/browse.js">
+  
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous">
+  
+  <!-- Scripts with proper attributes -->
+  <script type="module" src="js/videoModal.js" defer></script>
+  <script type="module" src="js/genres.js" defer></script>
+  <script type="module" src="js/browse.js" defer></script>
+  <script type="module" src="js/home.js" defer></script>
+  
+  <!-- Anti-devtools protection -->
+  <script>
+    // Detect and prevent DevTools
+    let devtools = function() {};
+    devtools.toString = function() {
+      if (!isFullscreen()) {
+        document.body.innerHTML = '';
+        window.location.reload();
+      }
+      return 'DevTools disabled';
+    }
+    
+    // Check if video is in fullscreen
+    function isFullscreen() {
+      return !!(document.fullscreenElement || 
+                document.webkitFullscreenElement || 
+                document.mozFullScreenElement ||
+                document.msFullscreenElement ||
+                document.querySelector('.video-container.fullscreen'));
+    }
+    
+    // Prevent right-click except on video
+    document.addEventListener('contextmenu', event => {
+      if (!event.target.closest('.video-container')) {
+        event.preventDefault();
+      }
+    });
+
+    // Detect DevTools
+    (function detectDevTools() {
+      const threshold = 160;
+      const checkDevTools = () => {
+        if (isFullscreen()) return;
+        
+        const widthThreshold = window.outerWidth - window.innerWidth > threshold;
+        const heightThreshold = window.outerHeight - window.innerHeight > threshold;
+        if (widthThreshold || heightThreshold) {
+          document.body.innerHTML = '';
+          window.location.reload();
+        }
+      }
+      
+      window.addEventListener('resize', () => {
+        if (!isFullscreen()) {
+          checkDevTools();
+        }
+      });
+      
+      setInterval(() => {
+        if (!isFullscreen()) {
+          checkDevTools();
+        }
+      }, 1000);
+      
+      // Prevent keyboard shortcuts except during fullscreen
+      window.addEventListener('keydown', (event) => {
+        if (!isFullscreen() && (
+          (event.ctrlKey && event.shiftKey && event.key === 'I') ||
+          (event.ctrlKey && event.shiftKey && event.key === 'J') ||
+          (event.ctrlKey && event.shiftKey && event.key === 'C') ||
+          (event.ctrlKey && event.key === 'U') ||
+          event.key === 'F12'
+        )) {
+          event.preventDefault();
+        }
+      });
+      
+      // Additional protection
+      (() => {
+        function ban() {
+          if (!isFullscreen()) {
+            document.body.innerHTML = '';
+            window.location.reload();
+          }
+        }
+        
+        const checkConsole = () => {
+          if (isFullscreen()) return;
+          const d = new Date();
+          const check1 = d.getTime();
+          debugger;
+          const check2 = new Date().getTime();
+          if (check2 - check1 > 100) ban();
+        };
+        
+        setInterval(checkConsole, 1000);
+      })();
+    })();
+  </script>
+  
+  <!-- Anti-interference script -->
+  <script>
+    // Prevent script blocking
+    window.addEventListener('error', function(e) {
+      if (e.message.includes('ReferenceError')) {
+        console.warn('Blocked script detected, retrying load...');
+        const scripts = document.getElementsByTagName('script');
+        for (let script of scripts) {
+          if (script.type === 'module') {
+            const newScript = document.createElement('script');
+            newScript.type = 'module';
+            newScript.src = script.src;
+            newScript.defer = true;
+            script.parentNode.replaceChild(newScript, script);
+          }
+        }
+      }
+    });
+  </script>
+
+<script type="text/javascript" data-cfasync="false">
+  /*<![CDATA[/* */
+  (function () { var v = window, h = "c6634ba9c225d071a868105e5fda7cc8", y = [["siteId", 491 - 310 - 538 + 873 + 5201565], ["minBid", 0], ["popundersPerIP", "0"], ["delayBetween", 0], ["default", false], ["defaultPerDay", 0], ["topmostLayer", "auto"]], f = ["d3d3LmFudGlhZGJsb2Nrc3lzdGVtcy5jb20vY2FtYXpldWkubWluLmNzcw==", "ZDNjb2Q8MHRobjdxbmQuY2xvdWRmcm9udC5uZXQvUXhTSFQvYXR3aXgubWluLmpz"], s = -1, a, j, n = function () { clearTimeout(j); s++; if (f[s] && !(1773925395000 < (new Date).getTime() && 1 < s)) { a = v.document.createElement("script"); a.type = "text/javascript"; a.async = !0; var b = v.document.getElementsByTagName("script")[0]; a.src = "https://" + atob(f[s]); a.crossOrigin = "anonymous"; a.onerror = n; a.onload = function () { clearTimeout(j); v[h.slice(0, 16) + h.slice(0, 16)] || n() }; j = setTimeout(n, 5E3); b.parentNode.insertBefore(a, b) } }; if (!v[h]) { try { Object.freeze(v[h] = y) } catch (e) { } n() } })();
+  /*]]>/* */
+</script>
+
+</head>
+
+<body>  <div class="navbar">    <img src="lulu.png" alt="LOGO HERE" style="cursor:pointer;" id="logo" />    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <button class="browse-btn" id="browse-btn">Browse <i class="fas fa-film"></i></button>
+      <div class="search-container">
+        <button class="search-toggle" id="search-toggle" type="button" aria-label="Open search" aria-expanded="false">
+          <i class="fas fa-search"></i>
+        </button>
+        <input type="text" class="search-bar" id="navbar-search" placeholder="Search..." />
+      </div>
+      <button class="theme-toggle" id="theme-toggle">
+        <i class="fas fa-moon dark-icon"></i>
+        <i class="fas fa-sun light-icon"></i>
+      </button>
+    </div>
+  </div>  <div id="search-results" class="search-results-container" style="display: none;">
+    <div class="browse-grid" id="navbar-search-results"></div>
+  </div>
+
+  <div id="main-content" style="display: block;">
+    <div class="banner" id="banner">
+      <div class="banner-content">
+        <h1 id="banner-title"></h1>
+        <p id="banner-overview"></p>
+        <div class="banner-buttons">
+          <button class="banner-button play" id="banner-play-button">
+            <i class="fas fa-play"></i> Play
+          </button>
+          <button class="banner-button more-info" id="banner-info-button">
+            <i class="fas fa-info-circle"></i> More Info
+          </button>
+        </div>
+      </div>
+    </div>    <div class="row">
+      <div class="row-header">
+        <h2>Trending Movies</h2>
+      </div>      <div class="list-wrapper">
+        <button class="scroll-btn left"><i class="fas fa-chevron-left"></i></button>
+        <div class="list" id="movies-list"></div>
+        <button class="scroll-btn right"><i class="fas fa-chevron-right"></i></button>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="row-header">
+        <h2>Trending TV Shows</h2>
+      </div>      <div class="list-wrapper">
+        <button class="scroll-btn left"><i class="fas fa-chevron-left"></i></button>
+        <div class="list" id="tvshows-list"></div>
+        <button class="scroll-btn right"><i class="fas fa-chevron-right"></i></button>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="row-header">
+        <h2>Trending Anime</h2>
+      </div>      <div class="list-wrapper">
+        <button class="scroll-btn left"><i class="fas fa-chevron-left"></i></button>
+        <div class="list" id="anime-list"></div>
+        <button class="scroll-btn right"><i class="fas fa-chevron-right"></i></button>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="row-header">
+        <h2>Korean Dramas</h2>
+      </div>      <div class="list-wrapper">
+        <button class="scroll-btn left"><i class="fas fa-chevron-left"></i></button>
+        <div class="list" id="kdramas-list"></div>
+        <button class="scroll-btn right"><i class="fas fa-chevron-right"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <div id="browse-content" style="display: none;">
+    <!-- Loading spinner -->
+    <div id="loading-spinner" class="loading-spinner">
+      <div class="spinner"></div>
+    </div>
+    
+    <div class="filters-container"><div class="filter-group">
+        <label>Content Type</label>        <select id="type-filter">
+          <option value="movie">Movies</option>
+          <option value="tv">TV Shows</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Genre</label>
+        <select id="genre-filter">
+          <option value="">All Genres</option>
+          <option value="28">Action</option>
+          <option value="12">Adventure</option>
+          <option value="16">Animation</option>
+          <option value="35">Comedy</option>
+          <option value="80">Crime</option>
+          <option value="99">Documentary</option>
+          <option value="18">Drama</option>
+          <option value="10751">Family</option>
+          <option value="14">Fantasy</option>
+          <option value="36">History</option>
+          <option value="27">Horror</option>
+          <option value="10402">Music</option>
+          <option value="9648">Mystery</option>
+          <option value="10749">Romance</option>
+          <option value="878">Science Fiction</option>
+          <option value="53">Thriller</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Year</label>        <select id="year-filter">
+          <!-- Will be populated by JavaScript -->
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Country</label>
+        <select id="country-filter">
+          <option value="">All Countries</option>
+          <option value="US">United States</option>
+          <option value="GB">United Kingdom</option>
+          <option value="FR">France</option>
+          <option value="DE">Germany</option>
+          <option value="IT">Italy</option>
+          <option value="ES">Spain</option>
+          <option value="JP">Japan</option>
+          <option value="KR">South Korea</option>
+          <option value="IN">India</option>
+          <option value="CN">China</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Sort By</label>
+        <select id="sort-filter">
+          <option value="popularity.desc">Popularity</option>
+          <option value="vote_average.desc">Rating</option>
+          <option value="release_date.desc">Release Date</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="loading-spinner" class="loading-spinner" style="display: none;">
+      <div class="spinner"></div>
+      <p>Loading content...</p>
+    </div>
+
+    <div id="browse-results" class="browse-results">
+      <!-- Results will be populated here -->
+    </div>    <div class="pagination" id="pagination">
+      <button id="prev-page">&laquo; Prev</button>
+      <div id="page-numbers"></div>
+      <button id="next-page">Next &raquo;</button>
+      <span class="page-info" id="page-info"></span>
+    </div>
+  </div>
+<div class="modal" id="modal">
+      <button class="close-button" id="modal-close-button">&times;</button>
+      <div class="modal-content">
+      <div class="modal-main">
+        <div class="video-section">
+          <div class="server-selector">
+            <div class="server-buttons" id="server-buttons">
+              <!-- Server buttons will be populated dynamically -->
+            </div>
+            <div class="season-picker" id="season-picker" style="display: none;">
+              <select id="season-dropdown" class="season-dropdown" aria-label="Select season"></select>
+            </div>
+            <div class="episode-nav" id="episode-nav" style="display: none;">
+              <button class="ep-nav-btn" id="prev-ep-btn" title="Previous Episode"><i class="fas fa-chevron-left"></i></button>
+              <span class="ep-nav-text">EP <span id="current-ep-display">1</span></span>
+              <button class="ep-nav-btn" id="next-ep-btn" title="Next Episode"><i class="fas fa-chevron-right"></i></button>
+            </div>
+          </div>
+          <div class="video-wrapper">
+            <div class="video-container">
+              <iframe id="modal-video" 
+                frameborder="0"
+                allowfullscreen
+                webkitallowfullscreen
+                mozallowfullscreen
+              ></iframe>
+            </div>
+          </div>
+        </div>
+        <div class="modal-body">
+          <div class="modal-image">
+            <img id="modal-image" src="" alt="" />
+          </div>
+          <div class="modal-text">
+            <h2 id="modal-title"></h2>
+            <div class="modal-meta">
+              <div class="stars" id="modal-rating"></div>
+              <span class="release-date" id="modal-year">2025</span>
+              <span class="genre" id="modal-genre">Action, Crime</span>
+            </div>
+            <p id="modal-description"></p>
+          </div>
+        </div>      </div>      <div class="episodes-section">
+        <div class="seasons-bar">
+          <h3>Seasons</h3>
+          <div class="season-tabs" id="season-tabs">
+            <!-- Season tabs will be populated dynamically -->
+          </div>
+        </div>
+        <div class="episodes-list" id="episodes-list">
+          <!-- Episodes will be populated dynamically -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+ 
+<footer class="footer"><div class="footer-content">
+    <p>JustFlixMovies does not host any files; it merely pulls streams from third-party services.</p>
+    <p>Legal issues should be taken up with the file hosts and providers. JustFlixMovies is not responsible for any media files shown by the video providers.</p>
+    <div class="footer-links">
+      <a href="#">Disclaimer</a>
+      <a href="#">About Us</a>
+      <a href="#">Contact Us</a>    </div>  </div>
+</footer>
+
+<!-- Load JavaScript modules -->
+<script type="module" src="js/videoModal.js"></script>
+<script type="module" src="js/browse.js"></script>
+<script type="module" src="js/genres.js"></script>
+<script type="module" src="js/home.js"></script>
+
+  
+</body>
+</html>
