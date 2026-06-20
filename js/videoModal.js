@@ -971,13 +971,15 @@ function tryNextServer(currentServer) {
 
 // Add anti-interference handler
 window.addEventListener('DOMContentLoaded', () => {
+    const allowedDomains = ['vidup.to', 'vidsrc', 'videasy', 'vidlink.pro', '111movies.com', 'vidjoy.pro', '2embed.cc', 'moviesapi.club', 'multiembed.mov', 'embedmovie.net', 'gdriveplayer.us'];
+    
     // Override any attempts to modify the iframe
     const observer = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
             if (mutation.type === 'attributes' && mutation.target.id === 'modal-video') {
                 const iframe = mutation.target;
                 const currentSrc = iframe.getAttribute('src');
-                if (currentSrc && !currentSrc.includes('vidsrc') && !currentSrc.includes('videasy')) {
+                if (currentSrc && !allowedDomains.some(domain => currentSrc.includes(domain))) {
                     logDebug('Blocked unauthorized iframe source modification');
                     iframe.setAttribute('src', iframe.dataset.lastValidSrc || '');
                 }
