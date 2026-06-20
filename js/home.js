@@ -196,6 +196,7 @@ async function displayList(items, containerId) {
     // Clone the old container and replace it with a new one to remove old event listeners
     const oldContainer = container;
     const newContainer = oldContainer.cloneNode(false);
+    newContainer.id = oldContainer.id;
     newContainer.innerHTML = '';
     newContainer.classList.add('list'); // Add the list class while preserving others
     oldContainer.parentNode.replaceChild(newContainer, oldContainer);
@@ -615,10 +616,6 @@ function initListNavigation() {
         let startPageX;
 
         list.addEventListener('mousedown', (e) => {
-            isDragging = true;
-            lastPageX = e.pageX;
-            e.preventDefault();
-        });        list.addEventListener('mousedown', (e) => {
             isDragging = true;
             startPageX = e.pageX;
             scrollLeft = list.scrollLeft;

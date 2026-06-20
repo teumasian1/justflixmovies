@@ -148,7 +148,6 @@ async function showDetails(item) {
     document.getElementById('search-results').style.display = 'none';
     document.getElementById('browse-content').style.display = 'none';
     
-    modal.style.display = 'flex';
     modal.classList.add('show');
     
     // Set modal content
@@ -219,7 +218,7 @@ async function showDetails(item) {
     const type = currentItem.media_type;
     const endpoints = type === 'movie' ? MOVIE_ENDPOINTS : TV_ENDPOINTS;
     const servers = [
-      { id: 'vidsrc.cc' },
+      { id: 'vidup.to' },
       { id: 'vidsrc.me' },
       { id: 'player.videasy.net' },
       ...endpoints.map((_, i) => ({ id: `server${i + 3}` }))
@@ -252,7 +251,7 @@ async function showDetails(item) {
     // If none work, fallback to first
     if (!found) {
       logDebug('No working servers found, falling back to default');
-      changeServer('vidsrc.cc');
+      changeServer('vidup.to');
       const buttons = document.querySelectorAll('.server-btn');
       buttons.forEach(btn => btn.classList.remove('active'));
       const activeButton = Array.from(buttons).find(btn => btn.textContent.trim() === 'Server 1');
@@ -282,7 +281,7 @@ function populateServerButtons() {
     container.innerHTML = '';
     
     const servers = [
-      { name: 'Server 1', id: 'vidsrc.cc', url: 'https://vidsrc.cc/v2/embed' },
+      { name: 'Server 1', id: 'vidup.to', url: 'https://vidup.to' },
       { name: 'Server 2', id: 'vidsrc.me', url: 'https://vidsrc.me/embed' },
       { name: 'Server 3', id: 'player.videasy.net', url: 'https://player.videasy.net' },
       ...endpoints.map((endpoint, i) => ({ 
@@ -424,6 +423,12 @@ function getServerUrl(server, type, id, season = '1', episode = '1') {
     logDebug(`Building URL - server: ${server}, type: ${type}, id: ${id}, season: ${selectedSeason}, episode: ${selectedEpisode}`);
     
     switch (server) {
+        case 'vidup.to':
+            if (type === 'movie') {
+                return `https://vidup.to/movie/${id}?autoPlay=true`;
+            }
+            return `https://vidup.to/tv/${id}/${selectedSeason}/${selectedEpisode}?autoPlay=true`;
+
         case 'vidsrc.cc':
             if (type === 'movie') {
                 return `https://vidsrc.cc/v2/embed/movie/${id}`;
@@ -753,32 +758,30 @@ function closeModal() {
     const modal = document.getElementById('modal');
     if (modal) {
         modal.classList.remove('show');
-        
+
         // Remove URL parameters when closing modal
         window.history.pushState({}, '', window.location.pathname);
-        
-        setTimeout(() => { 
-            modal.style.display = 'none';
-            
-            // Show appropriate content based on current view
-            const browseContent = document.getElementById('browse-content');
-            const mainContent = document.getElementById('main-content');
-            const searchResults = document.getElementById('search-results');
-            
-            if (browseContent.style.display === 'block') {
-                browseContent.style.display = 'block';
-            } else if (searchResults.style.display === 'block') {
-                searchResults.style.display = 'block';
-            } else {
-                mainContent.style.display = 'block';
+
+        // Show appropriate content based on current view
+        const browseContent = document.getElementById('browse-content');
+        const mainContent = document.getElementById('main-content');
+        const searchResults = document.getElementById('search-results');
+
+        if (browseContent.style.display === 'block') {
+            browseContent.style.display = 'block';
+        } else if (searchResults.style.display === 'block') {
+            searchResults.style.display = 'block';
+        } else {
+            mainContent.style.display = 'block';
+        }
+
+        // Clear video source after transition
+        setTimeout(() => {
+            const videoFrame = document.getElementById('modal-video');
+            if (videoFrame) {
+                videoFrame.src = '';
             }
         }, 300);
-
-        // Clear video source
-        const videoFrame = document.getElementById('modal-video');
-        if (videoFrame) {
-            videoFrame.src = '';
-        }
     }
 }
 
@@ -952,7 +955,7 @@ function handleEpisodeClick(episodeItem, server, seasonNumber) {
 
 function tryNextServer(currentServer) {
     const servers = [
-        'vidsrc.cc',
+        'vidup.to',
         'vidsrc.me',
         'player.videasy.net'
     ];
