@@ -681,11 +681,6 @@ function updateVideoIframe() {
         frameContainer.className = 'iframe-container';
         frameContainer.style.cssText = 'position: relative; width: 100%; height: 100%; overflow: hidden;';
         
-        // Add protective overlay to prevent unwanted scripts
-        const overlay = document.createElement('div');
-        overlay.className = 'iframe-overlay';
-        overlay.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none;';
-        
         // Add load event handler before setting src
         newFrame.onload = () => {
             logDebug(`Video loaded successfully from ${embedURL}`);
@@ -716,7 +711,6 @@ function updateVideoIframe() {
         try {
             // Add frame to container
             frameContainer.appendChild(newFrame);
-            frameContainer.appendChild(overlay);
 
             // Set the source after all security measures are in place
             newFrame.src = embedURL;
