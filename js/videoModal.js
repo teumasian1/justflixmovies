@@ -675,7 +675,7 @@ function updateVideoIframe() {
         newFrame.setAttribute('playsinline', 'true');
         newFrame.setAttribute('webkitallowfullscreen', 'true');
         newFrame.setAttribute('mozallowfullscreen', 'true');
-        newFrame.setAttribute('referrerpolicy', 'no-referrer');
+        newFrame.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
         
         // Create containment div for additional security
         const frameContainer = document.createElement('div');
