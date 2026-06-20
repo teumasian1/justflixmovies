@@ -214,7 +214,14 @@ async function showDetails(item) {
       resetTvOnlyControls();
     }
     
-    // Try all servers in order and select the first working one
+    // Start loading seasons/episodes in parallel (for TV shows)
+    let seasonsPromise = Promise.resolve();
+    if (currentItem.media_type === 'tv') {
+      logDebug('Loading seasons and episodes in parallel...');
+      seasonsPromise = populateSeasonsAndEpisodes(currentItem.id);
+    }
+
+    // Try all servers in parallel and select the first working one
     const type = currentItem.media_type;
     const endpoints = type === 'movie' ? MOVIE_ENDPOINTS : TV_ENDPOINTS;
     const servers = [
@@ -224,27 +231,33 @@ async function showDetails(item) {
       ...endpoints.map((_, i) => ({ id: `server${i + 3}` }))
     ];
 
-    let found = false;
-    for (let i = 0; i < servers.length; i++) {
-      const serverId = servers[i].id;
+    const probeServer = async (serverId) => {
       const url = getServerUrl(serverId, type, currentItem.id);
-      if (!url) continue;
-
+      if (!url) return null;
       try {
         logDebug(`Testing server ${serverId} with URL: ${url}`);
         const response = await fetch(url, { method: 'HEAD', mode: 'no-cors' });
         if (response.ok || response.type === 'opaque') {
           logDebug(`Server ${serverId} is working`);
-          changeServer(serverId);
-          const buttons = document.querySelectorAll('.server-btn');
-          buttons.forEach(btn => btn.classList.remove('active'));
-          const activeButton = Array.from(buttons).find(btn => btn.dataset.server === serverId);
-          if (activeButton) activeButton.classList.add('active');
-          found = true;
-          break;
+          return serverId;
         }
       } catch (e) {
         logDebug(`Error testing server ${serverId}: ${e.message}`);
+      }
+      return null;
+    };
+
+    const probes = servers.map(server => probeServer(server.id));
+    let found = false;
+    const pending = new Set(probes);
+    while (pending.size > 0 && !found) {
+      const winner = await Promise.race(
+        [...pending].map(p => p.then(result => ({ result, promise: p })))
+      );
+      pending.delete(winner.promise);
+      if (winner.result) {
+        changeServer(winner.result);
+        found = true;
       }
     }
 
@@ -252,17 +265,10 @@ async function showDetails(item) {
     if (!found) {
       logDebug('No working servers found, falling back to default');
       changeServer('vidup.to');
-      const buttons = document.querySelectorAll('.server-btn');
-      buttons.forEach(btn => btn.classList.remove('active'));
-      const activeButton = Array.from(buttons).find(btn => btn.textContent.trim() === 'Server 1');
-      if (activeButton) activeButton.classList.add('active');
     }
 
-    // Populate seasons and episodes if the item is a TV show
-    if (currentItem.media_type === 'tv') {
-      logDebug('Loading seasons and episodes...');
-      populateSeasonsAndEpisodes(currentItem.id);
-    }
+    // Wait for seasons/episodes to finish loading
+    await seasonsPromise;
   } catch (error) {
     logDebug(`Error in showDetails: ${error.message}`);
   }
@@ -305,13 +311,6 @@ function populateServerButtons() {
     });
 
     select.addEventListener('change', (e) => changeServer(e.target.value));
-
-    // Set first server as active by default
-    if (servers.length > 0) {
-      changeServer(servers[0].id);
-    } else {
-      logDebug('Error: No server options were created');
-    }
   } catch (error) {
     logDebug(`Error in populateServerButtons: ${error.message}`);
   }
