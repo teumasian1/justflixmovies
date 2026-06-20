@@ -48,8 +48,20 @@ document.addEventListener('DOMContentLoaded', () => {
     withRetry(() => {
         // Handle URL parameters if present
         const urlParams = new URLSearchParams(window.location.search);
-        const itemId = urlParams.get('id');
-        const itemType = urlParams.get('type');
+        let itemId = urlParams.get('id');
+        let itemType = urlParams.get('type');
+        
+        // Also parse SEO-friendly URLs like /movie/slug-id or /tv/slug-id
+        // Hash-based format for localhost: /#/movie/slug-id
+        // Path-based format for production: /movie/slug-id
+        if (!itemId || !itemType) {
+            const urlToParse = window.location.hash ? window.location.hash.substring(1) : window.location.pathname;
+            const pathMatch = urlToParse.match(/^\/(movie|tv)\/.+-(\d+)$/);
+            if (pathMatch) {
+                itemType = pathMatch[1];
+                itemId = pathMatch[2];
+            }
+        }
         
         if (itemId && itemType) {
             // Fetch and show details for the item from URL

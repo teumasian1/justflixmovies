@@ -89,15 +89,35 @@ window.addEventListener('popstate', (event) => {
     }
 });
 
+function slugify(text) {
+    return text
+        .toLowerCase()
+        .replace(/[^\w\s-]/g, '')
+        .replace(/[\s_]+/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '')
+        .substring(0, 80);
+}
+
+function isLocalhost() {
+    return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+}
+
+function buildItemUrl(type, slug, id) {
+    const path = `/${type}/${slug}-${id}`;
+    return isLocalhost() ? `/#${path}` : path;
+}
+
 // Main function to show video modal
 async function showDetails(item) {
   try {
     currentItem = item;
     logDebug(`Showing details for: ${item.title || item.name}`);
     
-    // Update URL with movie/show information
+    // Update URL with movie/show information for SEO
     const mediaType = item.media_type || (item.first_air_date ? 'tv' : 'movie');
-    const newUrl = `${window.location.pathname}?type=${mediaType}&id=${item.id}`;
+    const slug = slugify(item.title || item.name);
+    const newUrl = buildItemUrl(mediaType, slug, item.id);
     window.history.pushState({ type: mediaType, id: item.id }, '', newUrl);
     
     // Update page meta tags for SEO
@@ -288,8 +308,8 @@ function populateServerButtons() {
     
     const servers = [
       { name: 'Server 1', id: 'vidup.to', url: 'https://vidup.to' },
-      { name: 'Server 2', id: 'vidsrc.me', url: 'https://vidsrc.me/embed' },
-      { name: 'Server 3', id: 'player.videasy.net', url: 'https://player.videasy.net' },
+      { name: 'Server 2', id: 'vidlink.pro', url: 'https://vidlink.pro' },
+      { name: 'Server 3', id: 'vidsrc.cc', url: 'https://vidsrc.cc' },
       ...endpoints.map((endpoint, i) => ({ 
         name: `Server ${i + 4}`, 
         id: `server${i + 4}`, 
@@ -427,6 +447,12 @@ function getServerUrl(server, type, id, season = '1', episode = '1') {
                 return `https://vidup.to/movie/${id}`;
             }
             return `https://vidup.to/tv/${id}/${selectedSeason}/${selectedEpisode}`;
+
+        case 'vidlink.pro':
+            if (type === 'movie') {
+                return `https://vidlink.pro/movie/${id}`;
+            }
+            return `https://vidlink.pro/tv/${id}/${selectedSeason}/${selectedEpisode}`;
 
         case 'vidsrc.cc':
             if (type === 'movie') {
@@ -621,24 +647,14 @@ async function updateEpisodes(showId, seasonNumber) {
         updateEpisodeNavButtons();
     }
 }
-
 function updateVideoIframe() {
-    const videoFrame = document.getElementById('modal-video');
     const dropdown = document.getElementById('server-dropdown');
     
-    if (!videoFrame || !dropdown || !currentItem) {
+    if (!dropdown || !currentItem) {
         logDebug('Missing required elements for video update');
         return;
     }
 
-    // Ensure iframe has proper attributes
-    videoFrame.allowFullscreen = true;
-    videoFrame.allow = 'encrypted-media; picture-in-picture; autoplay; fullscreen';
-    videoFrame.setAttribute('playsinline', 'true');
-    videoFrame.setAttribute('webkitallowfullscreen', 'true');
-    videoFrame.setAttribute('mozallowfullscreen', 'true');
-    videoFrame.removeAttribute('sandbox');
-    
     const server = dropdown.value;
     logDebug(`Active server: ${server}`);
     
@@ -653,24 +669,21 @@ function updateVideoIframe() {
 
     logDebug(`Current season: ${seasonNumber}, episode: ${episodeNumber}`);
     
-const embedURL = getServerUrl(server, type, currentItem.id, seasonNumber, episodeNumber);    logDebug(`Generated embed URL: ${embedURL}`);
+    const embedURL = getServerUrl(server, type, currentItem.id, seasonNumber, episodeNumber);
+    logDebug(`Generated embed URL: ${embedURL}`);
     if (!embedURL) {
         logDebug('Failed to generate embed URL');
         return;
     }
 
     try {
-        const currentSrc = videoFrame.src;
-        if (currentSrc === embedURL) {
+        const videoFrame = document.getElementById('modal-video');
+        if (videoFrame && videoFrame.src === embedURL) {
             logDebug('URL unchanged, skipping update');
             return;
         }
 
-        videoFrame.src = '';
-        setTimeout(() => {
-            videoFrame.src = embedURL;
-            logDebug(`Updated video frame source to: ${embedURL}`);
-        }, 100);
+        recreateVideoIframe(embedURL);
     } catch (error) {
         logDebug(`Error updating video frame: ${error.message}`);
         const nextServer = tryNextServer(server);
@@ -678,7 +691,7 @@ const embedURL = getServerUrl(server, type, currentItem.id, seasonNumber, episod
             logDebug(`Error recovery: trying next server: ${nextServer}`);
             changeServer(nextServer);
         }
-}
+    }
 }
 
 function updateEpisodeDescription() {
@@ -699,7 +712,7 @@ function closeModal() {
         modal.classList.remove('show');
 
         // Remove URL parameters when closing modal
-        window.history.pushState({}, '', window.location.pathname);
+        window.history.pushState({}, '', isLocalhost() ? '/#' : '/');
 
         // Show appropriate content based on current view
         const browseContent = document.getElementById('browse-content');
@@ -895,8 +908,8 @@ function handleEpisodeClick(episodeItem, server, seasonNumber) {
 function tryNextServer(currentServer) {
     const servers = [
         'vidup.to',
-        'vidsrc.me',
-        'player.videasy.net'
+        'vidlink.pro',
+        'vidsrc.cc'
     ];
     
     const currentIndex = servers.indexOf(currentServer);
@@ -906,75 +919,68 @@ function tryNextServer(currentServer) {
     return servers[currentIndex + 1];
 }
 
-// Add anti-interference handler
-window.addEventListener('DOMContentLoaded', () => {
-    const allowedDomains = ['vidup.to', 'vidsrc', 'videasy', 'vidlink.pro', '111movies.com', 'vidjoy.pro', '2embed.cc', 'moviesapi.club', 'multiembed.mov', 'embedmovie.net', 'gdriveplayer.us'];
-    
-    // Override any attempts to modify the iframe
-    const observer = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-            if (mutation.type === 'attributes' && mutation.target.id === 'modal-video') {
-                const iframe = mutation.target;
-                const currentSrc = iframe.getAttribute('src');
-                if (currentSrc && !allowedDomains.some(domain => currentSrc.includes(domain))) {
-                    logDebug('Blocked unauthorized iframe source modification');
-                    iframe.setAttribute('src', iframe.dataset.lastValidSrc || '');
-                }
-            }
-        });
-    });
+// Anti-interference observer
+const allowedDomains = ['vidup.to', 'vidsrc', 'videasy', 'vidlink.pro', '111movies.com', 'vidjoy.pro', '2embed.cc', 'moviesapi.club', 'multiembed.mov', 'embedmovie.net', 'gdriveplayer.us'];
 
-    // Watch for changes to the iframe
-    const config = { attributes: true, childList: false, subtree: false };
+const iframeObserver = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+        if (mutation.type === 'attributes' && mutation.target.id === 'modal-video') {
+            const iframe = mutation.target;
+            const currentSrc = iframe.getAttribute('src');
+            if (currentSrc && !allowedDomains.some(domain => currentSrc.includes(domain))) {
+                logDebug('Blocked unauthorized iframe source modification');
+                iframe.setAttribute('src', iframe.dataset.lastValidSrc || '');
+            }
+        }
+    });
+});
+
+window.addEventListener('DOMContentLoaded', () => {
     const videoFrame = document.getElementById('modal-video');
     if (videoFrame) {
-        observer.observe(videoFrame, config);
+        iframeObserver.observe(videoFrame, { attributes: true, childList: false, subtree: false });
     }
 });
+
+// Recreates iframe to bypass mobile browser fullscreen bugs when changing src
+function recreateVideoIframe(embedURL) {
+    const container = document.querySelector('.video-container');
+    if (!container) return null;
+
+    // Use innerHTML to force the browser's native HTML parser to evaluate the security attributes
+    // This is sometimes required by strict mobile browsers like iOS Safari for allowfullscreen to take effect.
+    container.innerHTML = `<iframe id="modal-video" 
+        frameborder="0"
+        allowfullscreen
+        webkitallowfullscreen
+        mozallowfullscreen
+        playsinline
+        allow="encrypted-media; picture-in-picture; autoplay; fullscreen"
+        src="${embedURL}"></iframe>`;
+
+    const newFrame = document.getElementById('modal-video');
+    newFrame.dataset.lastValidSrc = embedURL;
+
+    newFrame.onload = () => logDebug('Video loaded successfully');
+    newFrame.onerror = () => {
+        logDebug('Failed to load video');
+        const dropdown = document.getElementById('server-dropdown');
+        const currentServer = dropdown ? dropdown.value : '';
+        const nextServer = tryNextServer(currentServer);
+        if (nextServer && currentServer !== nextServer) {
+            changeServer(nextServer);
+        }
+    };
+    
+    iframeObserver.observe(newFrame, { attributes: true, childList: false, subtree: false });
+    logDebug(`Recreated video frame source: ${embedURL}`);
+    return newFrame;
+}
 
 function updateVideoWithUrl(embedURL) {
     if (!embedURL) {
         logDebug('Failed to generate URL for server');
         return;
     }
-
-    const videoFrame = document.getElementById('modal-video');
-    if (!videoFrame) {
-        logDebug('Video frame element not found');
-        return;
-    }
-
-    videoFrame.allowFullscreen = true;
-    videoFrame.setAttribute('allowfullscreen', 'true');
-    videoFrame.setAttribute('webkitallowfullscreen', 'true');
-    videoFrame.setAttribute('mozallowfullscreen', 'true');
-    videoFrame.setAttribute('playsinline', 'true');
-    videoFrame.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
-    videoFrame.allow = 'encrypted-media; picture-in-picture; autoplay; fullscreen';
-
-    // Clear current content first
-    videoFrame.src = '';
-    
-    // Short delay to ensure clearing happens
-    setTimeout(() => {
-        // Update iframe source
-        videoFrame.src = embedURL;
-        logDebug(`Updated video frame source to: ${embedURL}`);
-        
-        // Add load event handler
-        videoFrame.onload = () => {
-            logDebug('Video loaded successfully');
-        };
-        
-        // Add error handler
-        videoFrame.onerror = () => {
-            logDebug('Failed to load video');
-            videoFrame.src = '';
-            const dropdown = document.getElementById('server-dropdown');
-            const currentServer = dropdown ? dropdown.value : '';
-            if (currentServer.startsWith('server')) {
-                tryNextServer(currentServer);
-            }
-        };
-    }, 100);
+    recreateVideoIframe(embedURL);
 }
