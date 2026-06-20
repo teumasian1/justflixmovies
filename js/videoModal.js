@@ -248,7 +248,7 @@ async function showDetails(item) {
       { id: 'vidup.to' },
       { id: 'vidsrc.me' },
       { id: 'player.videasy.net' },
-      ...endpoints.map((_, i) => ({ id: `server${i + 3}` }))
+      ...endpoints.map((_, i) => ({ id: `server${i + 4}` }))
     ];
 
     const probeServer = async (serverId) => {
@@ -308,8 +308,8 @@ function populateServerButtons() {
     
     const servers = [
       { name: 'Server 1', id: 'vidup.to', url: 'https://vidup.to' },
-      { name: 'Server 2', id: 'vidlink.pro', url: 'https://vidlink.pro' },
-      { name: 'Server 3', id: 'vidsrc.cc', url: 'https://vidsrc.cc' },
+      { name: 'Server 2', id: 'vidsrc.me', url: 'https://vidsrc.me/embed' },
+      { name: 'Server 3', id: 'player.videasy.net', url: 'https://player.videasy.net' },
       ...endpoints.map((endpoint, i) => ({ 
         name: `Server ${i + 4}`, 
         id: `server${i + 4}`, 
@@ -908,8 +908,8 @@ function handleEpisodeClick(episodeItem, server, seasonNumber) {
 function tryNextServer(currentServer) {
     const servers = [
         'vidup.to',
-        'vidlink.pro',
-        'vidsrc.cc'
+        'vidsrc.me',
+        'player.videasy.net'
     ];
     
     const currentIndex = servers.indexOf(currentServer);
