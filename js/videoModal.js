@@ -246,8 +246,8 @@ async function showDetails(item) {
     const endpoints = type === 'movie' ? MOVIE_ENDPOINTS : TV_ENDPOINTS;
     const servers = [
       { id: 'vidup.to' },
-      { id: 'vidsrc.me' },
-      { id: 'player.videasy.net' },
+      { id: 'vidlink.pro' },
+      { id: 'vidsrc.cc' },
       ...endpoints.map((_, i) => ({ id: `server${i + 4}` }))
     ];
 
@@ -947,18 +947,25 @@ function recreateVideoIframe(embedURL) {
     const container = document.querySelector('.video-container');
     if (!container) return null;
 
-    // Use innerHTML to force the browser's native HTML parser to evaluate the security attributes
-    // This is sometimes required by strict mobile browsers like iOS Safari for allowfullscreen to take effect.
-    container.innerHTML = `<iframe id="modal-video" 
-        frameborder="0"
-        allowfullscreen
-        webkitallowfullscreen
-        mozallowfullscreen
-        playsinline
-        allow="encrypted-media; picture-in-picture; autoplay; fullscreen"
-        src="${embedURL}"></iframe>`;
+    // Remove old iframe first to fully reset browser state
+    container.innerHTML = '';
 
-    const newFrame = document.getElementById('modal-video');
+    // Create iframe via DOM API and set properties directly on the element
+    // This ensures the browser's security model processes each attribute correctly
+    const newFrame = document.createElement('iframe');
+    newFrame.id = 'modal-video';
+    newFrame.src = embedURL;
+    newFrame.frameBorder = '0';
+    
+    // Fullscreen permissions - set both as attributes AND properties
+    newFrame.allowFullscreen = true;
+    newFrame.setAttribute('allowfullscreen', '');
+    newFrame.setAttribute('webkitallowfullscreen', '');
+    newFrame.setAttribute('mozallowfullscreen', '');
+    
+    // Permissions Policy - grant fullscreen to all origins (critical for nested iframes)
+    newFrame.setAttribute('allow', 'fullscreen *; encrypted-media *; picture-in-picture *; autoplay *');
+    
     newFrame.dataset.lastValidSrc = embedURL;
 
     newFrame.onload = () => logDebug('Video loaded successfully');
@@ -971,6 +978,9 @@ function recreateVideoIframe(embedURL) {
             changeServer(nextServer);
         }
     };
+
+    // Append to container (inserting into DOM triggers attribute parsing)
+    container.appendChild(newFrame);
     
     iframeObserver.observe(newFrame, { attributes: true, childList: false, subtree: false });
     logDebug(`Recreated video frame source: ${embedURL}`);
