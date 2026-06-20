@@ -1,1 +1,7 @@
-/*    /index.html   200
+/sitemap.xml    /sitemap.xml    200
+/robots.txt     /robots.txt     200
+/404.html       /404.html       200
+/manifest.json  /manifest.json  200
+/js/*           /js/:splat      200
+/css/*          /css/:splat     200
+/*              /index.html     200
