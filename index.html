@@ -4,176 +4,92 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="referrer" content="no-referrer">
-  <title>JustFlixMovies - Watch Movies & TV Shows Online</title>
+  <title>JustFlixMovies - Watch Free Movies & TV Shows Online in HD</title>
   
   <!-- SEO Meta Tags -->
-  <meta name="description" content="Watch the latest movies and TV shows online. Stream your favorite content in HD quality. New releases, popular series, and more.">
-  <meta name="keywords" content="movies, tv shows, watch online, streaming, series, films, entertainment">
+  <meta name="description" content="Watch free movies and TV shows online in HD quality. Stream trending movies, popular TV series, anime, and Korean dramas. No registration required. JustFlixMovies.">
+  <meta name="keywords" content="watch movies online free, free movies, tv shows, streaming, watch series online, anime, korean drama, HD movies, trending movies, new releases, films, entertainment, watch free">
   <meta name="robots" content="index, follow">
   <meta name="author" content="JustFlixMovies">
   
   <!-- Open Graph Meta Tags -->
-  <meta property="og:title" content="JustFlixMovies - Watch Movies & TV Shows Online">
-  <meta property="og:description" content="Stream the latest movies and TV shows in HD quality. Watch your favorite content instantly.">
+  <meta property="og:title" content="JustFlixMovies - Watch Free Movies & TV Shows Online in HD">
+  <meta property="og:description" content="Watch free movies and TV shows online in HD quality. Stream trending movies, popular TV series, anime, and Korean dramas. No registration required.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://justflixmovies.pages.dev">
   <meta property="og:image" content="lulu.png">
+  <meta property="og:site_name" content="JustFlixMovies">
+  <meta property="og:locale" content="en_US">
+  <meta name="theme-color" content="#141414">
   <meta name="google-site-verification" content="jrk3yYrSslYrfXTXmEpH3QDLLQ7IwNRTWOGh-lkqpJE" />
   
   <!-- Twitter Card Meta Tags -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="JustFlixMovies - Watch Movies & TV Shows">
-  <meta name="twitter:description" content="Stream the latest movies and TV shows in HD quality. Watch your favorite content instantly.">
+  <meta name="twitter:title" content="JustFlixMovies - Watch Free Movies & TV Shows">
+  <meta name="twitter:description" content="Watch free movies and TV shows online in HD. Stream trending movies, anime, K-dramas, and more. No registration.">
   <meta name="twitter:image" content="lulu.png">
   
   <!-- Canonical URL -->
   <link rel="canonical" href="https://justflixmovies.pages.dev">
+  <link rel="icon" type="image/png" sizes="192x192" href="lulu.png">
+  <link rel="apple-touch-icon" href="lulu.png">
+
+  <!-- Structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "JustFlixMovies",
+    "url": "https://justflixmovies.pages.dev",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://justflixmovies.pages.dev/?q={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  }
+  </script>
   
-  <!-- Modern Font: Inter -->
+  <!-- Resource hints -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://api.themoviedb.org">
+  <link rel="preconnect" href="https://image.tmdb.org" crossorigin>
+  <link rel="dns-prefetch" href="https://vidsrc.cc">
+
+  <!-- Fonts: DM Sans (UI) + Fraunces (cinematic serif display) -->
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet">
   
-  <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/home.css">
-  <link rel="stylesheet" href="css/videoModal.css">
-  <link rel="stylesheet" href="css/browse.css">
-  <link rel="stylesheet" href="css/premium.css">
-  
-  <!-- Module preloads -->
-  <link rel="modulepreload" href="js/videoModal.js">
-  <link rel="modulepreload" href="js/home.js">
-  <link rel="modulepreload" href="js/genres.js">
-  <link rel="modulepreload" href="js/browse.js">
-  
+  <!-- Stylesheet — Celluloid Noir redesign -->
+  <link rel="stylesheet" href="css/redesign.css">
+
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous">
-  
-  <!-- Scripts with proper attributes -->
-  <script type="module" src="js/videoModal.js" defer></script>
-  <script type="module" src="js/genres.js" defer></script>
-  <script type="module" src="js/browse.js" defer></script>
-  <script type="module" src="js/home.js" defer></script>
-  
-  <!-- Anti-devtools protection -->
-  <script>
-    // Detect and prevent DevTools
-    let devtools = function() {};
-    devtools.toString = function() {
-      if (!isFullscreen()) {
-        document.body.innerHTML = '';
-        window.location.reload();
-      }
-      return 'DevTools disabled';
-    }
-    
-    // Check if video is in fullscreen
-    function isFullscreen() {
-      return !!(document.fullscreenElement || 
-                document.webkitFullscreenElement || 
-                document.mozFullScreenElement ||
-                document.msFullscreenElement ||
-                document.querySelector('.video-container.fullscreen'));
-    }
-    
-    // Prevent right-click except on video
-    document.addEventListener('contextmenu', event => {
-      if (!event.target.closest('.video-container')) {
-        event.preventDefault();
-      }
-    });
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" media="print" onload="this.media='all'" crossorigin="anonymous">
+  <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"></noscript>
 
-    // Detect DevTools
-    (function detectDevTools() {
-      const threshold = 160;
-      const checkDevTools = () => {
-        if (isFullscreen()) return;
-        
-        const widthThreshold = window.outerWidth - window.innerWidth > threshold;
-        const heightThreshold = window.outerHeight - window.innerHeight > threshold;
-        if (widthThreshold || heightThreshold) {
-          document.body.innerHTML = '';
-          window.location.reload();
-        }
-      }
-      
-      window.addEventListener('resize', () => {
-        if (!isFullscreen()) {
-          checkDevTools();
-        }
-      });
-      
-      setInterval(() => {
-        if (!isFullscreen()) {
-          checkDevTools();
-        }
-      }, 1000);
-      
-      // Prevent keyboard shortcuts except during fullscreen
-      window.addEventListener('keydown', (event) => {
-        if (!isFullscreen() && (
-          (event.ctrlKey && event.shiftKey && event.key === 'I') ||
-          (event.ctrlKey && event.shiftKey && event.key === 'J') ||
-          (event.ctrlKey && event.shiftKey && event.key === 'C') ||
-          (event.ctrlKey && event.key === 'U') ||
-          event.key === 'F12'
-        )) {
-          event.preventDefault();
-        }
-      });
-      
-      // Additional protection
-      (() => {
-        function ban() {
-          if (!isFullscreen()) {
-            document.body.innerHTML = '';
-            window.location.reload();
-          }
-        }
-        
-        const checkConsole = () => {
-          if (isFullscreen()) return;
-          const d = new Date();
-          const check1 = d.getTime();
-          debugger;
-          const check2 = new Date().getTime();
-          if (check2 - check1 > 100) ban();
-        };
-        
-        setInterval(checkConsole, 1000);
-      })();
-    })();
-  </script>
-  
-  <!-- Anti-interference script -->
+  <!-- Scripts -->
+  <script type="module" src="js/videoModal.js"></script>
+  <script type="module" src="js/genres.js"></script>
+  <script type="module" src="js/browse.js"></script>
+  <script type="module" src="js/home.js"></script>
+
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
   <script>
-    // Prevent script blocking
-    window.addEventListener('error', function(e) {
-      if (e.message.includes('ReferenceError')) {
-        console.warn('Blocked script detected, retrying load...');
-        const scripts = document.getElementsByTagName('script');
-        for (let script of scripts) {
-          if (script.type === 'module') {
-            const newScript = document.createElement('script');
-            newScript.type = 'module';
-            newScript.src = script.src;
-            newScript.defer = true;
-            script.parentNode.replaceChild(newScript, script);
-          }
-        }
-      }
-    });
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-XXXXXXXXXX');
   </script>
 
-<script type="text/javascript" data-cfasync="false">
-  /*<![CDATA[/* */
-  (function () { var v = window, h = "c6634ba9c225d071a868105e5fda7cc8", y = [["siteId", 491 - 310 - 538 + 873 + 5201565], ["minBid", 0], ["popundersPerIP", "0"], ["delayBetween", 0], ["default", false], ["defaultPerDay", 0], ["topmostLayer", "auto"]], f = ["d3d3LmFudGlhZGJsb2Nrc3lzdGVtcy5jb20vY2FtYXpldWkubWluLmNzcw==", "ZDNjb2Q8MHRobjdxbmQuY2xvdWRmcm9udC5uZXQvUXhTSFQvYXR3aXgubWluLmpz"], s = -1, a, j, n = function () { clearTimeout(j); s++; if (f[s] && !(1773925395000 < (new Date).getTime() && 1 < s)) { a = v.document.createElement("script"); a.type = "text/javascript"; a.async = !0; var b = v.document.getElementsByTagName("script")[0]; a.src = "https://" + atob(f[s]); a.crossOrigin = "anonymous"; a.onerror = n; a.onload = function () { clearTimeout(j); v[h.slice(0, 16) + h.slice(0, 16)] || n() }; j = setTimeout(n, 5E3); b.parentNode.insertBefore(a, b) } }; if (!v[h]) { try { Object.freeze(v[h] = y) } catch (e) { } n() } })();
-  /*]]>/* */
-</script>
+  <script type="text/javascript" data-cfasync="false">
+    /*<![CDATA[/* */
+    (function () { var v = window, h = "c6634ba9c225d071a868105e5fda7cc8", y = [["siteId", 491 - 310 - 538 + 873 + 5201565], ["minBid", 0], ["popundersPerIP", "0"], ["delayBetween", 0], ["default", false], ["defaultPerDay", 0], ["topmostLayer", "auto"]], f = ["d3d3LmFudGlhZGJsb2Nrc3lzdGVtcy5jb20vY2FtYXpldWkubWluLmNzcw==", "ZDNjb2Q8MHRobjdxbmQuY2xvdWRmcm9udC5uZXQvUXhTSFQvYXR3aXgubWluLmpz"], s = -1, a, j, n = function () { clearTimeout(j); s++; if (f[s] && !(1773925395000 < (new Date).getTime() && 1 < s)) { a = v.document.createElement("script"); a.type = "text/javascript"; a.async = !0; var b = v.document.getElementsByTagName("script")[0]; a.src = "https://" + atob(f[s]); a.crossOrigin = "anonymous"; a.onerror = n; a.onload = function () { clearTimeout(j); v[h.slice(0, 16) + h.slice(0, 16)] || n() }; j = setTimeout(n, 5E3); b.parentNode.insertBefore(a, b) } }; if (!v[h]) { try { Object.freeze(v[h] = y) } catch (e) { } n() } })();
+    /*]]>/* */
+  </script>
 
 </head>
 
-<body>  <div class="navbar">    <img src="lulu.png" alt="LOGO HERE" style="cursor:pointer;" id="logo" />    <div class="nav-links">
+<body>  <div class="navbar">    <img src="lulu.png" alt="JustFlixMovies - Watch Free Movies and TV Shows Online" style="cursor:pointer;" id="logo" />    <div class="nav-links">
       <a href="index.html">Home</a>
       <button class="browse-btn" id="browse-btn">Browse <i class="fas fa-film"></i></button>
       <div class="search-container">
@@ -191,6 +107,8 @@
     <div class="browse-grid" id="navbar-search-results"></div>
   </div>
 
+  <h1 class="sr-only">Watch Free Movies Online HD – Trending TV Shows, Anime & Korean Dramas | JustFlixMovies</h1>
+
   <div id="main-content" style="display: block;">
     <div class="banner" id="banner">
       <div class="banner-content">
@@ -207,7 +125,7 @@
       </div>
     </div>    <div class="row">
       <div class="row-header">
-        <h2>Trending Movies</h2>
+        <h2>Trending Movies to Watch Online</h2>
       </div>      <div class="list-wrapper">
         <button class="scroll-btn left"><i class="fas fa-chevron-left"></i></button>
         <div class="list" id="movies-list"></div>
@@ -217,7 +135,7 @@
 
     <div class="row">
       <div class="row-header">
-        <h2>Trending TV Shows</h2>
+        <h2>Popular TV Shows to Stream Online</h2>
       </div>      <div class="list-wrapper">
         <button class="scroll-btn left"><i class="fas fa-chevron-left"></i></button>
         <div class="list" id="tvshows-list"></div>
@@ -227,7 +145,7 @@
 
     <div class="row">
       <div class="row-header">
-        <h2>Trending Anime</h2>
+        <h2>Watch Free Anime Online</h2>
       </div>      <div class="list-wrapper">
         <button class="scroll-btn left"><i class="fas fa-chevron-left"></i></button>
         <div class="list" id="anime-list"></div>
@@ -237,7 +155,7 @@
 
     <div class="row">
       <div class="row-header">
-        <h2>Korean Dramas</h2>
+        <h2>Korean Dramas & K-Series</h2>
       </div>      <div class="list-wrapper">
         <button class="scroll-btn left"><i class="fas fa-chevron-left"></i></button>
         <div class="list" id="kdramas-list"></div>
@@ -383,23 +301,23 @@
         </div>
       </div>
     </div>
-  </div>
+</div>
 
- 
+  <section class="seo-content" aria-label="About JustFlixMovies">
+    <p>JustFlixMovies is your go-to destination to <strong>watch free movies online in HD</strong> quality. Our platform brings together a massive collection of <strong>trending movies</strong>, popular <strong>TV shows</strong>, <strong>anime series</strong>, and <strong>Korean dramas</strong> — all available to stream instantly with no registration or subscription required. Whether you're looking for the latest Hollywood blockbusters or classic films, you can <strong>watch movies online free</strong> anytime, anywhere.</p>
+    <p>Our library is updated daily with new releases across every genre imaginable: action, adventure, comedy, drama, horror, sci-fi, romance, thriller, and more. Use our advanced filters to <strong>browse by genre, release year, country, and popularity rating</strong> to find exactly what you want to watch. From <strong>free HD movies streaming</strong> to complete TV series with full episodes, JustFlixMovies delivers a seamless viewing experience with multiple server options for reliable playback.</p>
+    <p>Anime fans can explore our curated collection of <strong>free anime streaming</strong> titles, from fan-favorite shonen series to critically acclaimed films. K-drama enthusiasts will find the latest <strong>Korean dramas with English subtitles</strong>, updated regularly. No matter what you're in the mood for, JustFlixMovies makes it easy to <strong>watch free movies and TV shows online</strong> without any hassle. Start streaming now and discover your next favorite show.</p>
+  </section>
+
+  
 <footer class="footer"><div class="footer-content">
     <p>JustFlixMovies does not host any files; it merely pulls streams from third-party services.</p>
     <p>Legal issues should be taken up with the file hosts and providers. JustFlixMovies is not responsible for any media files shown by the video providers.</p>
     <div class="footer-links">
-      <a href="#">Disclaimer</a>
-      <a href="#">About Us</a>
-      <a href="#">Contact Us</a>    </div>  </div>
+      <a href="/">Stream Movies</a>
+      <a href="/">Watch TV Shows</a>
+      <a href="/">Browse Genres</a>    </div>  </div>
 </footer>
-
-<!-- Load JavaScript modules -->
-<script type="module" src="js/videoModal.js"></script>
-<script type="module" src="js/browse.js"></script>
-<script type="module" src="js/genres.js"></script>
-<script type="module" src="js/home.js"></script>
 
   
 </body>
