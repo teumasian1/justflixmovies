@@ -632,8 +632,11 @@ function updateVideoIframe() {
     }
 
     // Ensure iframe has proper attributes
-    videoFrame.setAttribute('allowfullscreen', 'true');
-    videoFrame.setAttribute('allow', 'encrypted-media autoplay');
+    videoFrame.allowFullscreen = true;
+    videoFrame.allow = 'encrypted-media; picture-in-picture; autoplay; fullscreen';
+    videoFrame.setAttribute('playsinline', 'true');
+    videoFrame.setAttribute('webkitallowfullscreen', 'true');
+    videoFrame.setAttribute('mozallowfullscreen', 'true');
     videoFrame.removeAttribute('sandbox');
     
     const server = dropdown.value;
@@ -650,7 +653,7 @@ function updateVideoIframe() {
 
     logDebug(`Current season: ${seasonNumber}, episode: ${episodeNumber}`);
     
-    const embedURL = getServerUrl(server, type, currentItem.id, seasonNumber, episodeNumber);    logDebug(`Generated embed URL: ${embedURL}`);
+const embedURL = getServerUrl(server, type, currentItem.id, seasonNumber, episodeNumber);    logDebug(`Generated embed URL: ${embedURL}`);
     if (!embedURL) {
         logDebug('Failed to generate embed URL');
         return;
@@ -663,78 +666,19 @@ function updateVideoIframe() {
             return;
         }
 
-    // Create a new iframe element with secure settings
-        const newFrame = document.createElement('iframe');
-        newFrame.id = 'modal-video';
-        newFrame.className = 'protected-frame';
-        
-        // Set comprehensive security attributes
-        newFrame.setAttribute('allowfullscreen', 'true');
-        newFrame.setAttribute('allow', 'encrypted-media; picture-in-picture; autoplay; fullscreen');
-        newFrame.setAttribute('playsinline', 'true');
-        newFrame.setAttribute('webkitallowfullscreen', 'true');
-        newFrame.setAttribute('mozallowfullscreen', 'true');
-        newFrame.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
-        
-        // Create containment div for additional security
-        const frameContainer = document.createElement('div');
-        frameContainer.className = 'iframe-container';
-        frameContainer.style.cssText = 'position: relative; width: 100%; height: 100%; overflow: hidden;';
-        
-        // Add load event handler before setting src
-        newFrame.onload = () => {
-            logDebug(`Video loaded successfully from ${embedURL}`);
-            try {
-                // Additional security measures after load
-                newFrame.contentWindow.postMessage({ type: 'protection-init' }, '*');
-            } catch (e) {
-                logDebug('Post-load security initialization skipped');
-            }
-        };
-
-        // Enhanced error handling
-        newFrame.onerror = (error) => {
-            logDebug(`Error loading video from ${embedURL}: ${error}`);
-            const nextServer = tryNextServer(server);
-            if (nextServer) {
-                logDebug(`Trying next server: ${nextServer}`);
-                changeServer(nextServer);
-            }
-        };        // Set up security event listeners
-        window.addEventListener('message', function(event) {
-            if (event.source === newFrame.contentWindow) {
-                logDebug('Received message from iframe');
-            }
-        }, false);
-
-        // Wrap iframe setting in try-catch
-        try {
-            // Add frame to container
-            frameContainer.appendChild(newFrame);
-
-            // Set the source after all security measures are in place
-            newFrame.src = embedURL;
-
-            // Replace the old iframe with the new contained one
-            videoFrame.parentNode.replaceChild(frameContainer, videoFrame);
-            logDebug(`Updated video frame with new source: ${embedURL}`);
-        } catch (error) {
-            logDebug(`Error setting up video frame: ${error.message}`);
-            const nextServer = tryNextServer(server);
-            if (nextServer) {
-                logDebug(`Error recovery: trying next server: ${nextServer}`);
-                changeServer(nextServer);
-            }
-        }
+        videoFrame.src = '';
+        setTimeout(() => {
+            videoFrame.src = embedURL;
+            logDebug(`Updated video frame source to: ${embedURL}`);
+        }, 100);
     } catch (error) {
         logDebug(`Error updating video frame: ${error.message}`);
-        // Try falling back to a different server
         const nextServer = tryNextServer(server);
         if (nextServer) {
             logDebug(`Error recovery: trying next server: ${nextServer}`);
             changeServer(nextServer);
         }
-    }
+}
 }
 
 function updateEpisodeDescription() {
@@ -999,6 +943,14 @@ function updateVideoWithUrl(embedURL) {
         logDebug('Video frame element not found');
         return;
     }
+
+    videoFrame.allowFullscreen = true;
+    videoFrame.setAttribute('allowfullscreen', 'true');
+    videoFrame.setAttribute('webkitallowfullscreen', 'true');
+    videoFrame.setAttribute('mozallowfullscreen', 'true');
+    videoFrame.setAttribute('playsinline', 'true');
+    videoFrame.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+    videoFrame.allow = 'encrypted-media; picture-in-picture; autoplay; fullscreen';
 
     // Clear current content first
     videoFrame.src = '';
