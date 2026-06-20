@@ -203,7 +203,7 @@ async function displayBrowseResults(items) {
         // Set up placeholder and image URL    // Set up image loading
     const imageUrl = item.poster_path ? 
         `${IMG_URL}${item.poster_path}` : 
-        'placeholder.jpg';
+        '/placeholder.jpg';
     
     img.src = imageUrl;
     img.alt = item.title || item.name;
@@ -215,7 +215,7 @@ async function displayBrowseResults(items) {
     
     img.onerror = () => {
         posterContainer.classList.remove('loading');
-        img.src = 'placeholder.jpg';
+        img.src = '/placeholder.jpg';
     };
     
     const overlay = document.createElement('div');

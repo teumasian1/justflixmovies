@@ -616,12 +616,12 @@ async function updateEpisodes(showId, seasonNumber) {
             
             const thumbnailSrc = episode.still_path ? 
                 `${IMG_URL}${episode.still_path}` : 
-                'placeholder.jpg';
+                '/placeholder.jpg';
             
             episodeItem.innerHTML = `
                 <img class="episode-thumbnail" src="${thumbnailSrc}" 
                      alt="Episode ${episode.episode_number}" 
-                     onerror="this.src='placeholder.jpg'">
+                     onerror="this.src='/placeholder.jpg'">
                 <div class="episode-info">
                     <div class="episode-number">Episode ${episode.episode_number}</div>
                     <div class="episode-title">${episode.name || `Episode ${episode.episode_number}`}</div>

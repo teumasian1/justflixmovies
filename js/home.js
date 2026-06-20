@@ -237,13 +237,13 @@ async function displayList(items, containerId) {
             img.onerror = () => {
                 console.warn(`Image failed to load for ${item.title || item.name}`);
                 posterContainer.classList.remove('loading');
-                img.src = 'placeholder.jpg';
+                img.src = '/placeholder.jpg';
             };
             
             // Set up image loading
             const imageUrl = item.poster_path ? 
                 `${IMG_URL}${item.poster_path}` : 
-                'placeholder.jpg';
+                '/placeholder.jpg';
             
             console.log(`Loading image from ${imageUrl} for ${item.title || item.name}`);
             
