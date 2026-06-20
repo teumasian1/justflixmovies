@@ -1275,14 +1275,17 @@ select {
 /* <= 1200px — mobile modal layout */
 @media (max-width: 1200px) {
   .modal {
-    overflow-y: auto;
+    overflow: hidden auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .modal-content {
     display: flex; flex-direction: column;
     height: auto; min-height: 100vh;
     min-height: 100dvh;
-    max-height: none; overflow-y: auto;
+    max-height: none;
+    overflow: visible;
+    flex-shrink: 0;
     grid-template-columns: none;
     grid-template-rows: none;
     grid-template-areas: none;
@@ -1290,6 +1293,11 @@ select {
 
   .modal-content.is-movie-modal {
     display: flex;
+  }
+
+  .modal-main {
+    overflow: visible;
+    flex-shrink: 0;
   }
 
   .video-section {
@@ -1335,13 +1343,13 @@ select {
 
   .episodes-section {
     position: static; width: 100%;
-    height: auto; max-height: none;
-    min-height: 0; overflow: visible;
+    height: auto; max-height: 45vh;
+    min-height: 0; overflow: hidden;
     border-left: none;
     border-top: 1px solid var(--border-color);
   }
 
-  .episodes-list { max-height: none; overflow-y: visible; }
+  .episodes-list { max-height: none; overflow-y: auto; flex: 1; min-height: 0; }
   .episode-thumbnail { width: 130px; height: 73px; }
 }
 
