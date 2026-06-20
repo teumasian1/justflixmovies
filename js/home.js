@@ -586,49 +586,67 @@ function initializeEventListeners() {
 function initListNavigation() {
     const lists = document.querySelectorAll('.list');
     lists.forEach(list => {
-        let startX;
+        let startX, startY;
         let scrollLeft;
         let isScrolling = false;
+        let directionLocked = null;
+        const DIRECTION_THRESHOLD = 8;
         
-        // Add touch scrolling support with improved handling
         list.addEventListener('touchstart', (e) => {
             isScrolling = true;
-            startX = e.touches[0].pageX - list.offsetLeft;
+            directionLocked = null;
+            startX = e.touches[0].pageX;
+            startY = e.touches[0].pageY;
             scrollLeft = list.scrollLeft;
             list.classList.add('dragging');
         }, { passive: true });
 
         list.addEventListener('touchmove', (e) => {
             if (!isScrolling) return;
-            e.preventDefault();
-            const x = e.touches[0].pageX - list.offsetLeft;
-            const walk = (x - startX) * 2; // Multiply by 2 for faster scrolling
-            list.scrollLeft = scrollLeft - walk;
+            const dx = Math.abs(e.touches[0].pageX - startX);
+            const dy = Math.abs(e.touches[0].pageY - startY);
+
+            if (directionLocked === null && (dx > DIRECTION_THRESHOLD || dy > DIRECTION_THRESHOLD)) {
+                directionLocked = dx > dy ? 'horizontal' : 'vertical';
+            }
+
+            if (directionLocked === 'horizontal') {
+                e.preventDefault();
+                const x = e.touches[0].pageX;
+                const walk = (x - startX) * 2;
+                list.scrollLeft = scrollLeft - walk;
+            }
         }, { passive: false });
 
         list.addEventListener('touchend', () => {
             isScrolling = false;
+            directionLocked = null;
             list.classList.remove('dragging');
         }, { passive: true });
 
         // Add improved mouse drag scrolling
         let isDragging = false;
         let startPageX;
+        let hasMoved = false;
 
         list.addEventListener('mousedown', (e) => {
             isDragging = true;
+            hasMoved = false;
             startPageX = e.pageX;
             scrollLeft = list.scrollLeft;
             list.style.cursor = 'grabbing';
             list.classList.add('dragging');
-            e.preventDefault();
         });
 
         list.addEventListener('mousemove', (e) => {
             if (!isDragging) return;
             const x = e.pageX;
-            const walk = (x - startPageX) * 2; // Multiply by 2 for faster scrolling
-            list.scrollLeft = scrollLeft - walk;
+            const walk = Math.abs(x - startPageX);
+            if (walk > 5) {
+                hasMoved = true;
+                e.preventDefault();
+                list.scrollLeft = scrollLeft - (x - startPageX) * 2;
+            }
         });
 
         const stopDragging = () => {
@@ -639,6 +657,13 @@ function initListNavigation() {
 
         list.addEventListener('mouseup', stopDragging);
         list.addEventListener('mouseleave', stopDragging);
+
+        list.addEventListener('click', (e) => {
+            if (hasMoved) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        }, true);
 
         // Add scroll button click handlers
         const wrapper = list.closest('.list-wrapper');
@@ -665,7 +690,6 @@ async function init() {
     try {
         initTheme();
         initModalEvents();
-        initDragScroll(); // Initialize drag scrolling
         
         const movies = await fetchTrending('movie');
         const tvShows = await fetchTrending('tv');
