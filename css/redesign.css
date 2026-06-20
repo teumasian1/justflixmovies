@@ -1614,8 +1614,8 @@ select {
   .search-results-container .browse-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
 
   .modal-content { min-height: 100dvh; }
-  .video-wrapper { aspect-ratio: auto; min-height: 0; }
-  .video-container { aspect-ratio: auto; min-height: 0; }
+  .video-wrapper { aspect-ratio: 16 / 9; min-height: 0; }
+  .video-container { aspect-ratio: 16 / 9; min-height: 0; }
   .video-section { flex: none; min-height: 0; }
   .modal-body { padding: 10px 14px 16px; gap: 12px; }
   .modal-image { width: 60px; flex: 0 0 60px; height: 90px; }

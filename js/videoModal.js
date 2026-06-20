@@ -6,11 +6,6 @@ export const BACKDROP_URL = 'https://image.tmdb.org/t/p/original';  // For banne
 export const POSTER_URL = 'https://image.tmdb.org/t/p/w500';       // For poster images
 export const STILL_URL = 'https://image.tmdb.org/t/p/w300';        // For episode stills
 
-function isMobileDevice() {
-    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
-           (navigator.maxTouchPoints > 0 && window.innerWidth < 1024);
-}
-
 // Anti-interference measures
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000;
@@ -430,9 +425,9 @@ function getServerUrl(server, type, id, season = '1', episode = '1') {
     switch (server) {
         case 'vidup.to':
             if (type === 'movie') {
-                return isMobileDevice() ? `https://vidup.to/movie/${id}` : `https://vidup.to/movie/${id}?autoPlay=true`;
+                return `https://vidup.to/movie/${id}`;
             }
-            return isMobileDevice() ? `https://vidup.to/tv/${id}/${selectedSeason}/${selectedEpisode}` : `https://vidup.to/tv/${id}/${selectedSeason}/${selectedEpisode}?autoPlay=true`;
+            return `https://vidup.to/tv/${id}/${selectedSeason}/${selectedEpisode}`;
 
         case 'vidsrc.cc':
             if (type === 'movie') {
