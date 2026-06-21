@@ -1485,6 +1485,36 @@ body, button, input, select, textarea {
   .footer-links a { font-size: 0.76rem; }
 }
 
+/* ===== FULLSCREEN — fill the screen, no layout-induced gaps ===== */
+/* The embedded player triggers fullscreen, so the iframe and its ancestors
+   match :fullscreen. Drop the server-bar padding and the 16:9 aspect locks
+   (set in the responsive blocks) and stretch every layer to 100% so the video
+   fills edge to edge instead of leaving black ::backdrop gaps. */
+.video-section:fullscreen, .video-section:-webkit-full-screen,
+.video-wrapper:fullscreen, .video-wrapper:-webkit-full-screen,
+.video-container:fullscreen, .video-container:-webkit-full-screen,
+.iframe-container:fullscreen, .iframe-container:-webkit-full-screen {
+  width: 100% !important; height: 100% !important;
+  max-width: none !important; max-height: none !important;
+  min-height: 0 !important;
+  padding: 0 !important; margin: 0 !important;
+  aspect-ratio: auto !important;
+  background: #000;
+}
+/* The iframe itself, when it is the fullscreen element */
+#modal-video:fullscreen, #modal-video:-webkit-full-screen {
+  position: fixed !important; inset: 0 !important;
+  width: 100vw !important; height: 100vh !important;
+  width: 100dvw !important; height: 100dvh !important;
+  border: none !important;
+}
+/* Don't let the server bar overlay the video while fullscreen */
+.video-section:fullscreen .server-selector,
+.video-section:-webkit-full-screen .server-selector { display: none; }
+/* Any residual backdrop stays seamless black, not a visible gap */
+:fullscreen::backdrop { background: #000; }
+:-webkit-full-screen::backdrop { background: #000; }
+
 /* Fullscreen close button */
 .video-section:fullscreen .close-button,
 .video-section:-webkit-full-screen .close-button {
