@@ -129,6 +129,12 @@ async function showDetails(item) {
     if (item.poster_path) {
       document.querySelector('meta[property="og:image"]').setAttribute('content', `${IMG_URL}${item.poster_path}`);
     }
+    // Self-referential canonical so each title indexes as its own page
+    // (was hard-coded to the homepage, which collapsed every deep link into one URL).
+    const canonicalLink = document.querySelector('link[rel="canonical"]');
+    if (canonicalLink && !isLocalhost()) {
+      canonicalLink.setAttribute('href', `${window.location.origin}${newUrl}`);
+    }
 
     // Add structured data
     const structuredData = {
@@ -713,6 +719,12 @@ function closeModal() {
 
         // Remove URL parameters when closing modal
         window.history.pushState({}, '', isLocalhost() ? '/#' : '/');
+
+        // Restore homepage canonical so the index doesn't keep a stale title canonical
+        const canonicalLink = document.querySelector('link[rel="canonical"]');
+        if (canonicalLink && !isLocalhost()) {
+            canonicalLink.setAttribute('href', window.location.origin + '/');
+        }
 
         // Show appropriate content based on current view
         const browseContent = document.getElementById('browse-content');

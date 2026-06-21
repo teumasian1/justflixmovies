@@ -241,6 +241,15 @@ async function displayBrowseResults(items) {
     overlay.appendChild(releaseYear);
     overlay.appendChild(description);
     posterContainer.appendChild(img);
+
+    // Always-visible rating badge (top corner)
+    if (typeof item.vote_average === 'number' && item.vote_average > 0) {
+      const badge = document.createElement('div');
+      badge.className = 'poster-badge';
+      badge.innerHTML = `<i class="fas fa-star"></i>${item.vote_average.toFixed(1)}`;
+      posterContainer.appendChild(badge);
+    }
+
     posterContainer.appendChild(overlay);
     
     posterContainer.onclick = () => {

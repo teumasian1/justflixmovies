@@ -150,6 +150,24 @@ function displayBanner(item) {
     banner.style.backgroundImage = `url(${BACKDROP_URL}${item.backdrop_path})`;
     document.getElementById('banner-title').textContent = item.title || item.name;
     document.getElementById('banner-overview').textContent = item.overview;
+
+    // Populate hero meta chips (rating / year / type / HD)
+    const metaEl = document.getElementById('banner-meta');
+    if (metaEl) {
+        const chips = [];
+        if (typeof item.vote_average === 'number' && item.vote_average > 0) {
+            chips.push(`<span class="banner-chip rating"><i class="fas fa-star"></i>${item.vote_average.toFixed(1)}</span>`);
+        }
+        const dateStr = item.release_date || item.first_air_date;
+        const year = dateStr ? new Date(dateStr).getFullYear() : null;
+        if (year && !Number.isNaN(year)) {
+            chips.push(`<span class="banner-chip">${year}</span>`);
+        }
+        const isTV = item.media_type === 'tv' || (!item.title && !!item.name) || !!item.first_air_date;
+        chips.push(`<span class="banner-chip">${isTV ? 'TV Series' : 'Movie'}</span>`);
+        chips.push('<span class="banner-chip hd">HD</span>');
+        metaEl.innerHTML = chips.join('');
+    }
 }
 
 function nextBanner() {
@@ -272,6 +290,15 @@ async function displayList(items, containerId) {
             overlay.appendChild(releaseYear);
             overlay.appendChild(description);
             posterContainer.appendChild(img);
+
+            // Always-visible rating badge (top corner)
+            if (typeof item.vote_average === 'number' && item.vote_average > 0) {
+                const badge = document.createElement('div');
+                badge.className = 'poster-badge';
+                badge.innerHTML = `<i class="fas fa-star"></i>${item.vote_average.toFixed(1)}`;
+                posterContainer.appendChild(badge);
+            }
+
             posterContainer.appendChild(overlay);
             
             posterContainer.onclick = (e) => {
