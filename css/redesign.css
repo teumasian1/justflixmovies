@@ -572,6 +572,29 @@ body, button, input, select, textarea {
 /* ===== CONTENT ROWS ===== */
 .row { margin: clamp(28px, 3.4vw, 48px) 0; padding: 0; width: 100%; }
 
+/* Scroll reveal — content rises + fades in as it scrolls into view.
+   The hidden initial state is scoped under .reveal-ready (added by JS), so
+   if the script fails or JS is disabled, content stays fully visible. */
+.reveal-ready .reveal {
+  opacity: 0;
+  transform: translateY(34px);
+  transition:
+    opacity 0.7s var(--ease-out),
+    transform 0.7s var(--ease-out);
+  will-change: opacity, transform;
+}
+.reveal-ready .reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal-ready .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
 .row-header {
   padding: 0 4%;
   margin-bottom: 1.1rem;

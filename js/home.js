@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const urlParams = new URLSearchParams(window.location.search);
         let itemId = urlParams.get('id');
         let itemType = urlParams.get('type');
-        
+
         // Also parse SEO-friendly URLs like /movie/slug-id or /tv/slug-id
         // Hash-based format for localhost: /#/movie/slug-id
         // Path-based format for production: /movie/slug-id
@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 itemId = pathMatch[2];
             }
         }
-        
+
         if (itemId && itemType) {
             // Fetch and show details for the item from URL
             fetch(`${BASE_URL}/${itemType}/${itemId}?api_key=${API_KEY}`)
@@ -76,23 +76,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.error('Error fetching item details:', error);
                 });
         }
-
-        // Initialize video modal events
-        initVideoModalEvents();
-        // Initialize the application
-        return init();
-    }, 'initialization').catch(error => {
-        console.error('Critical initialization error:', error);
-        // Show user-friendly error message
-        const mainContent = document.getElementById('main-content');
-        if (mainContent) {
-            mainContent.innerHTML = `
-                <div class="error-message" style="text-align: center; padding: 2rem;">
-                    <h2>Oops! Something went wrong</h2>
-                    <p>Please refresh the page to try again.</p>
-                </div>
-            `;
-        }
+    }, 'deep-link').catch(error => {
+        console.error('Deep-link handling error:', error);
     });
 });
 
@@ -110,35 +95,36 @@ async function fetchTrending(type) {
 }
 
 async function fetchTrendingAnime() {
-  let allResults = [];
+  // Fetch pages in parallel instead of one at a time
+  const pages = [1, 2, 3];
+  const responses = await Promise.all(
+    pages.map(page =>
+      fetch(`${BASE_URL}/trending/tv/week?api_key=${API_KEY}&page=${page}`)
+        .then(res => res.json())
+    )
+  );
 
-  // Fetch from multiple pages to get more anime (max 3 pages for demo)
-  for (let page = 1; page <= 3; page++) {
-    const res = await fetch(`${BASE_URL}/trending/tv/week?api_key=${API_KEY}&page=${page}`);
-    const data = await res.json();
-    const filtered = data.results.filter(item =>
+  return responses.flatMap(data =>
+    (data.results || []).filter(item =>
       item.original_language === 'ja' && item.genre_ids.includes(16)
-    );
-    allResults = allResults.concat(filtered);
-  }
-
-  return allResults;
+    )
+  );
 }
 
 async function fetchTrendingKDramas() {
-  let allResults = [];
-  
-  // Fetch from multiple pages to get more K-dramas
-  for (let page = 1; page <= 3; page++) {
-    const res = await fetch(`${BASE_URL}/discover/tv?api_key=${API_KEY}&with_original_language=ko&sort_by=popularity.desc&first_air_date.gte=2025-06-01&page=${page}`);
-    const data = await res.json();
-    // Filter to ensure we only get Korean dramas (exclude variety shows, etc.)
-    const filtered = data.results.filter(item => 
-      item.genre_ids.includes(18) // Drama genre
-    );
-    allResults = allResults.concat(filtered);
-  }
-  
+  // Fetch pages in parallel instead of one at a time
+  const pages = [1, 2, 3];
+  const responses = await Promise.all(
+    pages.map(page =>
+      fetch(`${BASE_URL}/discover/tv?api_key=${API_KEY}&with_original_language=ko&sort_by=popularity.desc&first_air_date.gte=2025-06-01&page=${page}`)
+        .then(res => res.json())
+    )
+  );
+
+  const allResults = responses.flatMap(data =>
+    (data.results || []).filter(item => item.genre_ids.includes(18)) // Drama genre
+  );
+
   // Sort by popularity and return top results
   return allResults.sort((a, b) => b.popularity - a.popularity);
 }
@@ -721,29 +707,44 @@ function initListNavigation() {
     });
 }
 
+// Scroll-reveal: gradually reveal content rows as they enter the viewport
+function initScrollReveal() {
+    const targets = document.querySelectorAll('#main-content .row, .seo-content');
+    if (!targets.length) return;
+
+    // Flag that JS-driven reveal is active (CSS hides targets only under this class)
+    document.documentElement.classList.add('reveal-ready');
+    targets.forEach(el => el.classList.add('reveal'));
+
+    // Fallback if IntersectionObserver isn't supported: just show everything
+    if (!('IntersectionObserver' in window)) {
+        targets.forEach(el => el.classList.add('is-visible'));
+        return;
+    }
+
+    const observer = new IntersectionObserver((entries, obs) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('is-visible');
+                obs.unobserve(entry.target); // reveal once, then stop watching
+            }
+        });
+    }, {
+        root: null,
+        rootMargin: '0px 0px -10% 0px', // trigger slightly before fully in view
+        threshold: 0.12
+    });
+
+    targets.forEach(el => observer.observe(el));
+}
+
 // Initialization
 async function init() {
     try {
         initTheme();
         initModalEvents();
-        
-        const movies = await fetchTrending('movie');
-        const tvShows = await fetchTrending('tv');
-        const anime = await fetchTrendingAnime();
-        const kdramas = await fetchTrendingKDramas();
 
-        // Setup random banner items
-        bannerItems = movies
-            .sort(() => Math.random() - 0.5)
-            .slice(0, 4)
-            .filter(movie => movie.backdrop_path);
-
-        if (bannerItems.length > 0) {
-            displayBanner(bannerItems[0]);
-            startBannerSlideshow();
-        }
-        
-        // Add loading indicators
+        // Add loading indicators up front
         ['movies-list', 'tvshows-list', 'anime-list', 'kdramas-list'].forEach(id => {
             const container = document.getElementById(id);
             if (container) {
@@ -751,15 +752,40 @@ async function init() {
             }
         });
 
-        // Load and display content
-        await Promise.all([
-            displayList(movies, 'movies-list'),
-            displayList(tvShows, 'tvshows-list'),
-            displayList(anime, 'anime-list'),
-            displayList(kdramas, 'kdramas-list')
-        ]);
-        
-        // Initialize list navigation after content is loaded
+        // Kick off ALL fetches at once (parallel), and render each row
+        // independently as soon as its own data arrives — no row waits for another.
+        const moviesPromise = fetchTrending('movie');
+
+        const rows = [
+            { promise: moviesPromise, id: 'movies-list' },
+            { promise: fetchTrending('tv'), id: 'tvshows-list' },
+            { promise: fetchTrendingAnime(), id: 'anime-list' },
+            { promise: fetchTrendingKDramas(), id: 'kdramas-list' },
+        ];
+
+        const rowTasks = rows.map(({ promise, id }) =>
+            promise
+                .then(items => displayList(items, id))
+                .catch(err => console.error(`Failed to load ${id}:`, err))
+        );
+
+        // Set up the banner as soon as the movies data is ready (don't block rows)
+        moviesPromise
+            .then(movies => {
+                bannerItems = movies
+                    .sort(() => Math.random() - 0.5)
+                    .slice(0, 4)
+                    .filter(movie => movie.backdrop_path);
+
+                if (bannerItems.length > 0) {
+                    displayBanner(bannerItems[0]);
+                    startBannerSlideshow();
+                }
+            })
+            .catch(err => console.error('Failed to set up banner:', err));
+
+        // Wait for all rows to finish rendering, then wire up navigation
+        await Promise.all(rowTasks);
         initListNavigation();
     } catch (error) {
         console.error('Initialization error:', error);
@@ -773,6 +799,8 @@ document.addEventListener('DOMContentLoaded', () => {
         initVideoModalEvents();
         // Initialize event listeners
         initializeEventListeners();
+        // Reveal content rows on scroll
+        initScrollReveal();
         // Initialize the application
         return init();
     }, 'initialization').catch(error => {
