@@ -109,6 +109,43 @@ function buildItemUrl(type, slug, id) {
 }
 
 // Main function to show video modal
+// ===== Typewriter reveal for the modal title + description =====
+let typewriterTimers = [];
+// Delay (ms) before the modal typewriter starts. launchFromPoster raises this
+// so typing only begins once the full-screen launch overlay has dissolved.
+let modalTypeDelay = 420;
+
+function clearTypewriter() {
+  typewriterTimers.forEach((t) => clearTimeout(t));
+  typewriterTimers = [];
+}
+
+function typeWriter(el, text, { speed = 28, startDelay = 0 } = {}) {
+  if (!el) return;
+  text = text || '';
+  el.classList.remove('tw-typing', 'tw-done');
+  el.textContent = '';
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduce || !text) {
+    el.textContent = text;
+    el.classList.add('tw-done');
+    return;
+  }
+  let i = 0;
+  const step = () => {
+    i++;
+    el.textContent = text.slice(0, i);
+    if (i < text.length) {
+      typewriterTimers.push(setTimeout(step, speed));
+    } else {
+      el.classList.remove('tw-typing');
+      el.classList.add('tw-done');
+    }
+  };
+  el.classList.add('tw-typing');
+  typewriterTimers.push(setTimeout(step, startDelay));
+}
+
 async function showDetails(item) {
   try {
     currentItem = item;
@@ -177,8 +214,18 @@ async function showDetails(item) {
     modal.classList.add('show');
     
     // Set modal content
-    document.getElementById('modal-title').textContent = item.title || item.name;
-    document.getElementById('modal-description').textContent = item.overview;
+    // Typewriter reveal — title types first, then the description.
+    clearTypewriter();
+    const twTitle = item.title || item.name || '';
+    const twDesc = item.overview || '';
+    const twDelay = modalTypeDelay;
+    modalTypeDelay = 420; // reset to default for the next (direct) open
+    const titleSpeed = 40;
+    typeWriter(document.getElementById('modal-title'), twTitle, { speed: titleSpeed, startDelay: twDelay });
+    typeWriter(document.getElementById('modal-description'), twDesc, {
+      speed: 10,
+      startDelay: twDelay + twTitle.length * titleSpeed + 220,
+    });
     document.getElementById('modal-image').src = `${IMG_URL}${item.poster_path}`;
     document.getElementById('modal-rating').innerHTML = '★'.repeat(Math.round(item.vote_average / 2));
     document.getElementById('modal-year').textContent = new Date(item.release_date || item.first_air_date).getFullYear();
@@ -920,7 +967,9 @@ function launchFromPoster(sourceEl, item) {
     puck.classList.add('go');
   });
 
-  // Open the modal under the expanding poster, then dissolve the overlay to it
+  // Open the modal under the expanding poster, then dissolve the overlay to it.
+  // Hold the typewriter until the overlay has cleared (~1020ms launch-relative).
+  modalTypeDelay = 820;
   setTimeout(() => showDetails(item), 240);
   setTimeout(() => { layer.style.opacity = '0'; }, 660);
   setTimeout(() => layer.remove(), 1020);

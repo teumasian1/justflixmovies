@@ -1052,6 +1052,16 @@ body, button, input, select, textarea {
   transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1);
 }
 
+/* ===== Typewriter caret (modal title + description) ===== */
+.tw-typing::after {
+  content: '\258A';
+  margin-left: 2px;
+  color: var(--accent);
+  text-shadow: 0 0 12px var(--accent-glow);
+  animation: twCaret 0.7s steps(1) infinite;
+}
+@keyframes twCaret { 50% { opacity: 0; } }
+
 .modal-content {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 360px;
