@@ -1,7 +1,4 @@
 User-agent: *
 Allow: /
-Allow: /browse
-Disallow: /js/
-Disallow: /css/
 
 Sitemap: https://justflixmovies.pages.dev/sitemap2.xml
