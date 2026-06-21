@@ -3,7 +3,8 @@ import {
   BASE_URL,
   IMG_URL,
   createStarRating,
-  showDetails
+  showDetails,
+  launchFromPoster
 } from './videoModal.js';
 
 // State management
@@ -253,7 +254,7 @@ async function displayBrowseResults(items) {
     posterContainer.appendChild(overlay);
     
     posterContainer.onclick = () => {
-      showDetails(item);
+      launchFromPoster(posterContainer, item);
     };
     
     gridContainer.appendChild(posterContainer);

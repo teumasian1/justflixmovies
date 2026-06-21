@@ -865,9 +865,69 @@ function updateSeasonTabsScroll() {
     }
 }
 
+// ===== Grand "hero" launch =====
+// On poster click, the poster artwork and a neon play puck fly to the center
+// of the screen as the modal opens, so the click visibly travels into the
+// player. Falls back to a plain open when reduced motion is on or the source
+// element/image is unavailable.
+function launchFromPoster(sourceEl, item) {
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const img = sourceEl && sourceEl.querySelector ? sourceEl.querySelector('img') : null;
+  const rect = img ? img.getBoundingClientRect() : null;
+  if (reduce || !rect || !rect.width || !rect.height) {
+    showDetails(item);
+    return;
+  }
+
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+
+  const layer = document.createElement('div');
+  layer.className = 'poster-launch-layer flash';
+
+  // Poster artwork clone
+  const clone = document.createElement('div');
+  clone.className = 'poster-launch';
+  clone.style.left = rect.left + 'px';
+  clone.style.top = rect.top + 'px';
+  clone.style.width = rect.width + 'px';
+  clone.style.height = rect.height + 'px';
+  clone.style.backgroundImage = `url("${img.currentSrc || img.src}")`;
+
+  // Neon play puck, starting over the poster and travelling to centre
+  const pcx = rect.left + rect.width / 2;
+  const pcy = rect.top + rect.height / 2;
+  const puck = document.createElement('div');
+  puck.className = 'poster-launch-puck';
+  puck.style.left = pcx + 'px';
+  puck.style.top = pcy + 'px';
+  puck.style.setProperty('--dx', (vw / 2 - pcx) + 'px');
+  puck.style.setProperty('--dy', (vh / 2 - pcy) + 'px');
+
+  layer.appendChild(clone);
+  layer.appendChild(puck);
+  document.body.appendChild(layer);
+
+  // Centre, enlarged footprint for the clone
+  const scale = Math.min(vw * 0.5, 520) / rect.width;
+  const targetX = (vw - rect.width * scale) / 2;
+  const targetY = (vh - rect.height * scale) / 2;
+
+  requestAnimationFrame(() => {
+    clone.style.transform = `translate(${targetX - rect.left}px, ${targetY - rect.top}px) scale(${scale})`;
+    clone.style.opacity = '0';
+    puck.classList.add('go');
+  });
+
+  // Open the modal partway through so it fades in behind the arriving puck
+  setTimeout(() => showDetails(item), 190);
+  setTimeout(() => layer.remove(), 800);
+}
+
 // Export main functions
 export {
   showDetails,
+  launchFromPoster,
   closeModal,
   initVideoModalEvents,
   currentItem

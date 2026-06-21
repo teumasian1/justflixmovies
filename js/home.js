@@ -1,6 +1,7 @@
-import { 
-    showDetails, 
-    closeModal, 
+import {
+    showDetails,
+    launchFromPoster,
+    closeModal,
     initVideoModalEvents,
     API_KEY,
     BASE_URL,
@@ -298,7 +299,7 @@ async function displayList(items, containerId) {
             
             posterContainer.onclick = (e) => {
                 e.preventDefault();
-                showDetails(item);
+                launchFromPoster(posterContainer, item);
             };
             
             newContainer.appendChild(posterContainer);
@@ -375,10 +376,11 @@ async function searchTMDB() {
                 card.appendChild(titleElement);
 
                 card.onclick = () => {
-                    showDetails(item);
+                    // Launch first (reads the card's rect synchronously) before
+                    // hiding the search results.
+                    launchFromPoster(card, item);
                     document.getElementById('navbar-search').value = '';
                     searchResultsSection.style.display = 'none';
-                    mainContent.style.display = 'block';
                 };
                 resultsContainer.appendChild(card);
             });

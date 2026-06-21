@@ -1005,6 +1005,51 @@ body, button, input, select, textarea {
 }
 .modal.show .modal-content { transform: scale(1); opacity: 1; }
 
+/* ===== Grand poster -> modal launch ===== */
+.poster-launch-layer {
+  position: fixed; inset: 0; z-index: 4000; pointer-events: none;
+}
+.poster-launch-layer.flash::after {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(circle at 50% 50%,
+    rgba(255,45,120,0.26), rgba(59,130,246,0.10) 38%, transparent 64%);
+  opacity: 0; animation: launchFlash 0.6s ease-out forwards;
+}
+@keyframes launchFlash { 0% { opacity: 0; } 28% { opacity: 1; } 100% { opacity: 0; } }
+
+.poster-launch {
+  position: fixed;
+  border-radius: var(--radius-lg);
+  background-size: cover; background-position: center;
+  box-shadow: var(--shadow-glow);
+  transform-origin: top left;
+  transition: transform 0.6s var(--ease-out), opacity 0.6s ease-in;
+  will-change: transform, opacity;
+}
+.poster-launch-puck {
+  position: fixed;
+  width: 76px; height: 76px;
+  border-radius: 50%;
+  background-image: var(--grad);
+  display: grid; place-items: center;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.35);
+  transition: transform 0.55s var(--ease-out), opacity 0.5s ease;
+  box-shadow: 0 16px 50px var(--accent-glow), 0 0 26px var(--cyan-glow);
+  will-change: transform, opacity;
+}
+.poster-launch-puck::before {
+  content: '';
+  width: 0; height: 0; margin-left: 6px;
+  border-left: 24px solid #fff;
+  border-top: 15px solid transparent;
+  border-bottom: 15px solid transparent;
+}
+.poster-launch-puck.go {
+  opacity: 1;
+  transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1);
+}
+
 .modal-content {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 360px;
