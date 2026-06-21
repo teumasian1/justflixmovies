@@ -46,6 +46,13 @@ window.closeModal = (...args) => withRetry(() => closeModal(...args), 'closeModa
 // Initialize with retry mechanism
 document.addEventListener('DOMContentLoaded', () => {
     withRetry(() => {
+        // Remove the prerendered SEO fallback block. It's baked into the static
+        // /movie/* and /tv/* HTML for crawlers / no-JS, but lives outside
+        // #main-content, so once the SPA takes over it would otherwise linger
+        // above the home view after the modal closes. The SPA renders the real
+        // content (and opens the modal for deep links) below.
+        document.querySelector('.detail-seo')?.remove();
+
         // Handle URL parameters if present
         const urlParams = new URLSearchParams(window.location.search);
         let itemId = urlParams.get('id');
