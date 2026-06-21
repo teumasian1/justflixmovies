@@ -717,6 +717,15 @@ function closeModal() {
     if (modal) {
         modal.classList.remove('show');
 
+        // Drop the prerendered SEO fallback block (poster/title/description that
+        // the /movie/* and /tv/* static pages inject for crawlers). It lives
+        // outside #main-content, so it would otherwise linger above the home
+        // view once the modal closes. Removing it here — in response to the
+        // close interaction — keeps it present during initial load (no
+        // load-time layout shift), and any shift from removal is excluded from
+        // CLS because it happens within 500ms of user input.
+        document.querySelector('.detail-seo')?.remove();
+
         // Remove URL parameters when closing modal
         window.history.pushState({}, '', isLocalhost() ? '/#' : '/');
 

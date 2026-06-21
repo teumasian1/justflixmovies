@@ -46,13 +46,6 @@ window.closeModal = (...args) => withRetry(() => closeModal(...args), 'closeModa
 // Initialize with retry mechanism
 document.addEventListener('DOMContentLoaded', () => {
     withRetry(() => {
-        // Remove the prerendered SEO fallback block. It's baked into the static
-        // /movie/* and /tv/* HTML for crawlers / no-JS, but lives outside
-        // #main-content, so once the SPA takes over it would otherwise linger
-        // above the home view after the modal closes. The SPA renders the real
-        // content (and opens the modal for deep links) below.
-        document.querySelector('.detail-seo')?.remove();
-
         // Handle URL parameters if present
         const urlParams = new URLSearchParams(window.location.search);
         let itemId = urlParams.get('id');
@@ -112,7 +105,6 @@ let bannerInterval;
 async function fetchTrending(type) {
   const res = await fetch(`${BASE_URL}/trending/${type}/week?api_key=${API_KEY}`);
   const data = await res.json();
-  console.log(`Fetched ${type} data:`, data.results);
   return data.results;
 }
 
@@ -239,8 +231,7 @@ async function displayList(items, containerId) {
     oldContainer.parentNode.replaceChild(newContainer, oldContainer);
     
     const itemsWithPosters = items.filter(item => item.poster_path);
-    console.log(`Found ${itemsWithPosters.length} items with posters`);
-    
+
     for (const item of itemsWithPosters) {
         try {
             const posterContainer = document.createElement('div');
@@ -254,7 +245,6 @@ async function displayList(items, containerId) {
             posterContainer.classList.add('loading');
             
             img.onload = () => {
-                console.log(`Image loaded for ${item.title || item.name}`);
                 posterContainer.classList.remove('loading');
                 posterContainer.classList.add('loaded');
             };
@@ -266,12 +256,10 @@ async function displayList(items, containerId) {
             };
             
             // Set up image loading
-            const imageUrl = item.poster_path ? 
-                `${IMG_URL}${item.poster_path}` : 
+            const imageUrl = item.poster_path ?
+                `${IMG_URL}${item.poster_path}` :
                 '/placeholder.jpg';
-            
-            console.log(`Loading image from ${imageUrl} for ${item.title || item.name}`);
-            
+
             img.src = imageUrl;
             img.alt = item.title || item.name;
             
