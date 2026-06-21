@@ -1008,6 +1008,8 @@ body, button, input, select, textarea {
 /* ===== Grand poster -> modal launch ===== */
 .poster-launch-layer {
   position: fixed; inset: 0; z-index: 4000; pointer-events: none;
+  overflow: hidden;
+  transition: opacity 0.36s ease;
 }
 .poster-launch-layer.flash::after {
   content: ''; position: absolute; inset: 0;
@@ -1023,8 +1025,8 @@ body, button, input, select, textarea {
   background-size: cover; background-position: center;
   box-shadow: var(--shadow-glow);
   transform-origin: top left;
-  transition: transform 0.6s var(--ease-out), opacity 0.6s ease-in;
-  will-change: transform, opacity;
+  transition: transform 0.58s var(--ease-out), border-radius 0.58s ease;
+  will-change: transform;
 }
 .poster-launch-puck {
   position: fixed;

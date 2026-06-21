@@ -908,20 +908,22 @@ function launchFromPoster(sourceEl, item) {
   layer.appendChild(puck);
   document.body.appendChild(layer);
 
-  // Centre, enlarged footprint for the clone
-  const scale = Math.min(vw * 0.5, 520) / rect.width;
-  const targetX = (vw - rect.width * scale) / 2;
-  const targetY = (vh - rect.height * scale) / 2;
+  // Full FLIP: expand the poster to COVER the whole viewport (uniform scale +
+  // crop, so the artwork never distorts), then dissolve to the player.
+  const coverScale = Math.max(vw / rect.width, vh / rect.height);
+  const targetX = (vw - rect.width * coverScale) / 2;
+  const targetY = (vh - rect.height * coverScale) / 2;
 
   requestAnimationFrame(() => {
-    clone.style.transform = `translate(${targetX - rect.left}px, ${targetY - rect.top}px) scale(${scale})`;
-    clone.style.opacity = '0';
+    clone.style.transform = `translate(${targetX - rect.left}px, ${targetY - rect.top}px) scale(${coverScale})`;
+    clone.style.borderRadius = '0';
     puck.classList.add('go');
   });
 
-  // Open the modal partway through so it fades in behind the arriving puck
-  setTimeout(() => showDetails(item), 190);
-  setTimeout(() => layer.remove(), 800);
+  // Open the modal under the expanding poster, then dissolve the overlay to it
+  setTimeout(() => showDetails(item), 240);
+  setTimeout(() => { layer.style.opacity = '0'; }, 660);
+  setTimeout(() => layer.remove(), 1020);
 }
 
 // Export main functions
