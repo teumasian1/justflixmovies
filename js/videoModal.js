@@ -296,12 +296,10 @@ async function showDetails(item) {
 
     // Try all servers in parallel and select the first working one
     const type = currentItem.media_type;
-    const endpoints = type === 'movie' ? MOVIE_ENDPOINTS : TV_ENDPOINTS;
     const servers = [
       { id: 'vidup.to' },
-      { id: 'vidlink.pro' },
-      { id: 'vidsrc.cc' },
-      ...endpoints.map((_, i) => ({ id: `server${i + 4}` }))
+      { id: 'vidsrc.me' },
+      { id: 'player.videasy.net' }
     ];
 
     const probeServer = async (serverId) => {
@@ -350,7 +348,6 @@ async function showDetails(item) {
 function populateServerButtons() {
   try {
     const type = currentItem.media_type || (currentItem.first_air_date ? 'tv' : 'movie');
-    const endpoints = type === 'movie' ? MOVIE_ENDPOINTS : TV_ENDPOINTS;
     const container = document.getElementById('server-buttons');
     if (!container) {
       logDebug('Error: server-buttons container not found');
@@ -363,11 +360,8 @@ function populateServerButtons() {
       { name: 'Server 1', id: 'vidup.to', url: 'https://vidup.to' },
       { name: 'Server 2', id: 'vidsrc.me', url: 'https://vidsrc.me/embed' },
       { name: 'Server 3', id: 'player.videasy.net', url: 'https://player.videasy.net' },
-      ...endpoints.map((endpoint, i) => ({ 
-        name: `Server ${i + 4}`, 
-        id: `server${i + 4}`, 
-        url: endpoint 
-      }))
+      { name: 'Server 4', id: 'embed.filmu.in', url: 'https://embed.filmu.in' },
+      { name: 'Server 5', id: 'cinemaos.tech', url: 'https://cinemaos.tech' }
     ];
 
     logDebug(`Created ${servers.length} server options`);
@@ -524,6 +518,18 @@ function getServerUrl(server, type, id, season = '1', episode = '1') {
                 return `https://player.videasy.net/movie/${id}`;
             }
             return `https://player.videasy.net/tv/${id}/${selectedSeason}/${selectedEpisode}`;
+
+        case 'embed.filmu.in':
+            if (type === 'movie') {
+                return `https://embed.filmu.in/movie/${id}`;
+            }
+            return `https://embed.filmu.in/tv/${id}/${selectedSeason}/${selectedEpisode}`;
+
+        case 'cinemaos.tech':
+            if (type === 'movie') {
+                return `https://cinemaos.tech/player/${id}`;
+            }
+            return `https://cinemaos.tech/player/${id}/${selectedSeason}/${selectedEpisode}`;
 
         default:
             if (server.startsWith('server')) {
@@ -1041,9 +1047,10 @@ function tryNextServer(currentServer) {
     const servers = [
         'vidup.to',
         'vidsrc.me',
-        'player.videasy.net'
+        'player.videasy.net',
+        'embed.filmu.in'
     ];
-    
+
     const currentIndex = servers.indexOf(currentServer);
     if (currentIndex === -1 || currentIndex === servers.length - 1) {
         return servers[0]; // Wrap around to first server
